@@ -28,20 +28,22 @@ def vote(request, question_id):
 
 def gcam(request):
     # if this is a POST request we need to process the form data
-	if request.method == 'POST':
-		# create a form instance and populate it with data from the request:
-		form = NameForm(request.POST)
-		# check whether it's valid:
-		if form.is_valid():
-			name = request.POST.get('your_name','')
-			print('Entered name:', name)
-			return HttpResponseRedirect('redirect/')
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = NameForm(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            name = request.POST.get('your_name', '')
+            email = request.POST.get('your_email', '')
+            content = request.POST.get('message', '')
+            print('Entered name:', name, '\n', 'Email:', email, '\n', 'Message:', content)
+            return HttpResponseRedirect('redirect/')
 
     # if a GET (or any other method) we'll create a blank form
-	else:
-		form = NameForm()
+    else:
+        form = NameForm()
+        return render(request, 'polls/gcam.html', {'form': form})
 
-	return render(request, 'polls/gcam.html', {'form': form})
 
 def redirect(request):
     return render(request, 'polls/redirect.html')
