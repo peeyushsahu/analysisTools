@@ -1,7 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse
 from .models import Question
-from django.http import Http404
 from .forms import NameForm
 from django.http import HttpResponseRedirect
 
