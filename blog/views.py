@@ -4,5 +4,5 @@ from .models import Post
 
 
 def posts(request):
-    posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    posts = Post.objects.all()
     return render(request, 'blog/posts.html', {'posts': posts})

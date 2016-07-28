@@ -5,6 +5,14 @@
     <title>GCAM help</title>
 </head>
 <body>
-    {{posts}}
+    <div>
+        <h1>GCAM help</h1>
+    </div>
+    {% for post in posts %}
+        <div>
+            <p>published: {{ post.created_date }}</p>
+            <h2><a href="">{{post.title}}</a> </h2>
+        </div>
+    {%  endfor %}
 </body>
 </html>
