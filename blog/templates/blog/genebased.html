@@ -1,11 +1,42 @@
 <!DOCTYPE html>
 {% extends 'blog/base.html' %}
-
 {% block content %}
     <h1>Gene based analysis</h1>
-    <form method="POST" class="post-form">
+    <form method="POST", enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_table }}
-        <button type="submit" class="save btn btn-default">Save</button>
+        <!-- {{ form.as_table }} -->
+        {{ form.non_field_errors }}
+            <div class="fieldWrapper post-form">
+                {{ form.gene_text_field.errors }}
+                <label for="{{ form.gene_text_field.id_for_label }}">Paste gene names:</label><br>
+                {{ form.gene_text_field }}<br><br>
+            </div>
+            <div class="fieldWrapper post-form-upload">
+                {{ form.file.errors }}
+                <label for="{{ form.file.id_for_label }}">Upload file:</label>
+                {{ form.file }}<br>
+            </div>
+            <div class="fieldWrapper post-form">
+                <h4>Select optional arguments</h4><br>
+                {{ form.only_key_celltypes.errors }}
+                <label for="{{ form.only_key_celltypes.id_for_label }}">Analyse only key cell-types:</label>
+                {{ form.only_key_celltypes }}<br><br>
+            </div>
+            <div class="fieldWrapper post-form">
+                {{ form.gene_cluster.errors }}
+                <label for="{{ form.gene_cluster.id_for_label }}">Min no of genes per cell-type cluster:</label>
+                {{ form.gene_cluster }}<br><br>
+            </div>
+            <div class="fieldWrapper post-form">
+                {{ form.synonym.errors }}
+                <label for="{{ form.synonym.id_for_label }}">Consider synonym for input genes:</label>
+                {{ form.synonym }}<br><br>
+            </div>
+            <div class="fieldWrapper post-form">
+                {{ form.species.errors }}
+                <label for="{{ form.species.id_for_label }}">if yes, select organism:</label>
+                {{ form.species }}<br><br>
+            </div>
+        <button type="submit" class="save btn btn-default">Submit</button><br><br><br>
     </form>
 {% endblock %}

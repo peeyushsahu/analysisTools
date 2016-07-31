@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from .models import Post
 from .forms import genebasedform
@@ -10,5 +10,28 @@ def posts(request):
 
 
 def genebased(request):
-    form = genebasedform()
+    form = genebasedform
+    if request.method == 'POST':
+        form = form(request.POST, request.FILES)
+
+        if form.is_valid():
+            gene_text_field = request.POST.get('gene_text_field', '')
+            gene_list = list(gene_text_field.split('\r\n'))
+            print(len(gene_list))
+            # if upload file does not contain any gene names
+            if len(gene_list) < 2:
+                print('Here')
+                file = request.FILES['file']
+                gene_list = []
+                for gene in file:
+                    gene_list.append(gene)
+            only_key_celltypes = request.POST.get('only_key_celltypes', '')
+            gene_cluster = request.POST.get('gene_cluster', '')
+            synonym = request.POST.get('synonym', '')
+            if synonym:
+                species = request.POST.get('species', '')
+            else:
+                species = None
+            print(gene_list, gene_cluster, synonym, species)
+            return redirect('genebased')
     return render(request, 'blog/genebased.html', {'form': form})
