@@ -43,7 +43,7 @@ h4 {
     width: 20%;
 }
 
-.post-form label {
+.post-form label, li {
     display: inline;
 }
 
