@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 {% extends 'blog/base.html' %}
 {% block content %}
+{% load staticfiles %}
     <h1>Gene based analysis</h1>
-    <form method="POST", enctype="multipart/form-data">
+    <form name="genebasedForm" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <!-- {{ form.as_table }} -->
         {{ form.non_field_errors }}
@@ -37,6 +38,10 @@
                 <label for="{{ form.species.id_for_label }}">if yes, select organism:</label>
                 {{ form.species }}<br><br>
             </div>
-        <button type="submit" class="save btn btn-default">Submit</button><br><br><br>
+        <button onclick="dim();" type="submit" class="save btn btn-default">Submit</button><br><br><br>
+        <div id="dimmer">
+            <div id="loading-img"><img src="{% static 'js/Leonardo.gif' %}" alt="Loader"/>
+            </div>
+        </div>
     </form>
 {% endblock %}

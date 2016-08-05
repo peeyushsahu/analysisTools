@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from .models import Post
 from .forms import genebasedform
+import time
 
 
 def posts(request):
@@ -36,6 +37,12 @@ def genebased(request):
             else:
                 species = None
             print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
+
+            # This will take some time to  redirect
+            time.sleep(10)
+            '''
+            Here we will connect gcam
+            '''
             return redirect('genebased_results', path='GCAM86482')
 
     return render(request, 'blog/genebased.html', {'form': form})
