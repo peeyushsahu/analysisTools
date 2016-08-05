@@ -36,8 +36,14 @@ def genebased(request):
             else:
                 species = None
             print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
-            return redirect('genebased')
+            return redirect('genebased_results', path='GCAM86482')
+
     return render(request, 'blog/genebased.html', {'form': form})
+
+
+def genebased_res(request, path):
+    print(path)
+    return render(request, 'blog/genebased_results.html', {'rfolder': path})
 
 
 def contact(request):
