@@ -3,6 +3,7 @@ from django.utils import timezone
 from .models import Post
 from .forms import genebasedform
 import time
+import GCAM.analysis as ganalysis
 
 
 def posts(request):
@@ -11,6 +12,7 @@ def posts(request):
 
 
 def genebased(request):
+    parameter = {'subcommand': 'genebased'}
     form = genebasedform
     if request.method == 'POST':
         form = form(request.POST, request.FILES)
@@ -29,17 +31,19 @@ def genebased(request):
                         gene_list.append(gene)
             except:
                 print('Give cell')
-            only_key_celltypes = request.POST.get('only_key_celltypes', '')
+            only_key_celltypes = request.POST.get('only_key_celltypes', True)
             gene_cluster = request.POST.get('gene_cluster', '')
-            synonym = request.POST.get('synonym', '')
+            synonym = request.POST.get('synonym', False)
             if synonym:
                 species = request.POST.get('species', '')
             else:
                 species = None
             print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
-
+            parameter.update({'key_celltype_list':only_key_celltypes, 'synonym':synonym,
+                              'celltypeClusterSize':int(gene_cluster), 'org':species})
             # This will take some time to  redirect
             time.sleep(10)
+            ganalysis.gcam_analysis('', '', parameter, gene_list)
             '''
             Here we will connect gcam
             '''
