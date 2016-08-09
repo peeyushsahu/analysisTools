@@ -56,7 +56,7 @@ def check_old_analysed_genes(genenames, dataframe):
     return new_genelist, foundgenes_df
 
 
-def occurrence_df(genenames, resource_path, subquery):
+def occurrence_df(genenames, resource_path):
     '''
     This function will prepare the occurrence df for genes.
     :param genenames:
@@ -84,7 +84,7 @@ def occurrence_df(genenames, resource_path, subquery):
         sys.stdout.write("\rGenes remain for analyse:%d" % count)
         sys.stdout.flush()
         #print gene
-        GeneObj = Fetch_pmids.Genes(gene=gene, subquery=subquery, resource_path=resource_path)
+        GeneObj = Fetch_pmids.Genes(gene=gene, resource_path=resource_path) #, subquery=subquery
         GeneObj.get_pmids()
         total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
         GeneObj.get_pmid_pos(annoDB=annDB)

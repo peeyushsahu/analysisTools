@@ -11,7 +11,7 @@ import logging
 __author__ = 'peeyush'
 
 
-def gcam_analysis(outpath, resource_path, args, genelist=None):
+def gcam_analysis(args, outpath, resource_path, genelist=None):
     '''
     Main GCAM function.
     :param args:
@@ -101,7 +101,6 @@ def gene_based(args, resource_path, genenames, outdir):
     synonym = args['synonym']
     organism = args['org']
     genenames = genenames
-    subquery = args['subquery']
     primarygene = genenames
     cellSyn = FilesFolders.cell_synonym(resource_path)
     binom_prob = FilesFolders.read_binom_prob(resource_path)
@@ -112,7 +111,7 @@ def gene_based(args, resource_path, genenames, outdir):
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
         print ('Gene count after synonym:' + str(len(genenames)))
-    occuDF = Previous_genecheck.occurrence_df(genenames, resource_path, subquery)
+    occuDF = Previous_genecheck.occurrence_df(genenames, resource_path) # subquery is deprecated
     cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
