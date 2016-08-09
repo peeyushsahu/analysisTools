@@ -35,20 +35,22 @@ def genebased(request):
             only_key_celltypes = form.cleaned_data['only_key_celltypes']
             gene_cluster = request.POST.get('gene_cluster', '')
             synonym = form.cleaned_data['synonym']#request.POST.get('synonym', False)
-            if synonym:
-                species = request.POST.get('species', '')
-                parameter.update({'org': species})
-            else:
-                species = None
+            #if synonym:
+            species = request.POST.get('species', '')
+            parameter.update({'org': species})
             print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
-            parameter.update({'synonym':synonym})
+            parameter.update({'synonym': synonym,
+                              'key_celltype_list': only_key_celltypes,
+                              'celltypeClusterSize': int(gene_cluster)})
             # This will take some time to  redirect
             #time.sleep(10)
-            ganalysis.gcam_analysis(parameter, outpath='', resource_path='/home/sahu/PycharmProjects/GCAM_python/GCAM/resources', genelist=gene_list)
             '''
             Here we will connect gcam
             '''
-            return redirect('genebased_results', path='GCAM86482')
+            result_path = ganalysis.gcam_analysis(parameter, outpath='/home/peeyush/Desktop', resource_path='/home/peeyush/PycharmProjects/analysisTools/GCAM/resources', genelist=gene_list)
+            result_folder = result_path.split('/')[-1].strip()
+
+            return redirect('genebased_results', path=result_folder)
 
     return render(request, 'blog/genebased.html', {'form': form})
 

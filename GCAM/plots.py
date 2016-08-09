@@ -480,7 +480,7 @@ def plot_celltypesignificance(path, plotdf, args):
     plotdf = plotdf[(plotdf['genecluster'] >= 5)]
     if len(plotdf) < 1:
         sys.exit('Not enough genes for significant celltype plot, please see results at the GCAM_sigenes.xls')
-    if args['subcommand_name'] == 'exprbased':
+    if args['subcommand'] == 'exprbased':
         plotdf = plotdf.sort_values('p-val',ascending=True)
     l = np.log2(plotdf['genecluster'].tolist())
     t = plotdf['p-val'].tolist()

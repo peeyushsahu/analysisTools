@@ -18,7 +18,7 @@ def gcam_analysis(args, outpath, resource_path, genelist=None):
     :param resource_path:
     :return: cell occurrence dataframe
     '''
-    outdir = outpath
+    outdir = FilesFolders.create_folders(outpath)
     logging.basicConfig(filename=os.path.join(outdir, 'GCAM.log'), level=logging.INFO)
     logging.info('Started')
     resource_path = resource_path
@@ -51,6 +51,7 @@ def gcam_analysis(args, outpath, resource_path, genelist=None):
     print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Finished')
+    return outdir
 
 
 def write_parameter(args, outdir):
