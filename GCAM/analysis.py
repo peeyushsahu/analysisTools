@@ -150,7 +150,8 @@ def write_result(significanceDF, outdir, args):
     cellgenedf.sort_values('p-val', ascending=True)
     if len(cellgenedf)>0:
         filtereddf = filter_df(cellgenedf)
-        filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
+        #filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
+        filtereddf.to_csv(os.path.join(outdir, 'GCAM_sigenes.tsv'), sep='\t', index=False)
     else: print('No significant genes for celltype')
 
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
@@ -160,7 +161,8 @@ def write_result(significanceDF, outdir, args):
         significanceDF.data4radarplot()
         sigCelltypedf.sort_values('genecluster', ascending=True)
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
-        sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
+        #sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
+        sigCelltypedf.to_csv(os.path.join(outdir, 'GCAM_sigCelltypes.tsv'), sep='\t', index=False)
     else: print('No significant celltypes')
 
 

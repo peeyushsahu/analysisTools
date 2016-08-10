@@ -12,3 +12,4 @@ function dim(bool){
     if (typeof bool=='undefined') bool=true; // so you can shorten dim(true) to dim()
     document.getElementById('dimmer').style.display=(bool?'block':'none');
 }
+

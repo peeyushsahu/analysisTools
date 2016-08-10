@@ -17,4 +17,4 @@ class GenebasedForm(forms.Form):
         # if 'gene_text_field' is empty and 'file' is not given raise error
         if data and data.get('gene_text_field', '') == '':
             self.fields['file'].required = True
-            self.fields['file'].error_messages = {'required': 'Please upload file or paste genes!!!!'}
+            self.fields['file'].error_messages = {'required': 'Please upload file or paste gene names!!!!'}

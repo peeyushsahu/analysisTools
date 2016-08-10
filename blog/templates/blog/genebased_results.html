@@ -1,7 +1,36 @@
 <!DOCTYPE html>
 {% extends 'blog/base.html' %}
 {% block content %}
+{% load static %}
+    <div class="container" align="center">
+        <h1>GCAM genebased results</h1>
+        <!--<h2 id="title" onclick="sayBye();">Hello</h2>-->
+        <div class="result">
+            <h2>Gene-celltype enrichment heatmap</h2><br>
+            <p align="justify">Heatmap shows association of cell-types for each gene in input query. Association is based
+            on co-ocurrence of gene and cell-type in all abstracts gene is annotated.</p>
+            <img class="warnings" style="width: 80%; height: 80%;"
+                 src="{% static rfolder|add:'/GCAM_heatMap.svg' %}" alt="Gene-celltype enrichment heatmap not found!!!" /><br>
 
-    <h1>This is where the result will appear ;) {{rfolder}}</h1>
-    <h2 id="title" onclick="sayBye();">Hello</h2>
+            <h2>Significant celltypes</h2>
+                <script>
+                var file_path = "{% static rfolder|add:'/GCAM_sigCelltypes.tsv' %}";
+                    d3.tsv(file_path, function(data) {
+                        console.log(data[0]);
+                    });
+                </script>
+
+            <h2>Celltype significance plot</h2>
+            <p align="justify">Celltype significance plot visualizes enriched celltypes within the selected gene names.
+            Y-axis represent number of genes associated with cell-type and respective circle size represent significance.</p>
+            <img class="warnings" style="width: 80%; height: 80%;"
+                 src="{% static rfolder|add:'/GCAM_SigCelltype.svg' %}" alt="Significant celltype plot not found!!!" /><br>
+
+            <h2>Significant tissue type plot</h2>
+            <p align="justify">Significant tissue type plot clusters celltypes based on enrichment and provide an overview about
+            over-represented tissue type within the input gene.</p>
+            <img class="warnings" style="width: 50%; height: 50%;"
+                 src="{% static rfolder|add:'/GCAM_redar.svg' %}" alt="Significant tissue type plot not found!!!" /><br>
+        </div>
+    </div>
 {% endblock %}

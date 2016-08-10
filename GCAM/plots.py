@@ -477,7 +477,7 @@ def plot_celltypesignificance(path, plotdf, args):
     import numpy as np
     import sys
     print ('plotting celltype significance plot')
-    plotdf = plotdf[(plotdf['genecluster'] >= 5)]
+    #plotdf = plotdf[(plotdf['genecluster'] >= 5)]
     if len(plotdf) < 1:
         sys.exit('Not enough genes for significant celltype plot, please see results at the GCAM_sigenes.xls')
     if args['subcommand'] == 'exprbased':
