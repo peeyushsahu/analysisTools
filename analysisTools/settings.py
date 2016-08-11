@@ -125,4 +125,5 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     '/home/sahu/Desktop/GCAM_test',
+    '/home/peeyush/Desktop/gcam_test_data',
 ]

@@ -10,27 +10,48 @@
             <p align="justify">Heatmap shows association of cell-types for each gene in input query. Association is based
             on co-ocurrence of gene and cell-type in all abstracts gene is annotated.</p>
             <img class="warnings" style="width: 80%; height: 80%;"
-                 src="{% static rfolder|add:'/GCAM_heatMap.svg' %}" alt="Gene-celltype enrichment heatmap not found!!!" /><br>
+                 src="{% static rfolder|add:'/GCAM_heatMap.svg' %}" alt="Gene-celltype enrichment heatmap not created!!!" /><br>
 
             <h2>Significant celltypes</h2>
-                <script>
-                var file_path = "{% static rfolder|add:'/GCAM_sigCelltypes.tsv' %}";
-                    d3.tsv(file_path, function(data) {
-                        console.log(data[0]);
-                    });
-                </script>
+            <div id="sigcelltype">
+            <!--<table id="sigcelltype" class="display" width="100%" >-->
+            </div>
 
             <h2>Celltype significance plot</h2>
             <p align="justify">Celltype significance plot visualizes enriched celltypes within the selected gene names.
             Y-axis represent number of genes associated with cell-type and respective circle size represent significance.</p>
             <img class="warnings" style="width: 80%; height: 80%;"
-                 src="{% static rfolder|add:'/GCAM_SigCelltype.svg' %}" alt="Significant celltype plot not found!!!" /><br>
+                 src="{% static rfolder|add:'/GCAM_SigCelltype.svg' %}" alt="Significant celltype plot not created!!!" /><br>
 
             <h2>Significant tissue type plot</h2>
             <p align="justify">Significant tissue type plot clusters celltypes based on enrichment and provide an overview about
             over-represented tissue type within the input gene.</p>
             <img class="warnings" style="width: 50%; height: 50%;"
-                 src="{% static rfolder|add:'/GCAM_redar.svg' %}" alt="Significant tissue type plot not found!!!" /><br>
+                 src="{% static rfolder|add:'/GCAM_redar.svg' %}" alt="Significant tissue type plot not created!!!" /><br>
         </div>
     </div>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+        var file_path = "{% static rfolder|add:'/GCAM_sigCelltypes.tsv' %}";
+
+        d3.text(file_path, function(data) {
+        var parsedCSV = d3.tsv.parseRows(data);
+
+        var container = d3.select("#sigcelltype")
+            .append("table")
+            .attr("class","display")
+            .attr("width","100%")
+            .attr("id","example")
+
+            .selectAll("tr")
+                .data(parsedCSV).enter()
+                .append("tr")
+
+            .selectAll("td")
+                .data(function(d) { return d; }).enter()
+                .append("td")
+                .text(function(d) { return d; });
+        console.log(container)
+    });
+    </script>
 {% endblock %}

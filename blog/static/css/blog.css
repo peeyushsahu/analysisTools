@@ -134,3 +134,14 @@ h4 {
 .footer{
     padding-top: 60px;
 }
+
+.result table {
+    border-collapse: collapse;
+    border: 2px black solid;
+    font: 12px sans-serif;
+}
+
+.result td {
+    border: 1px black solid;
+    padding: 5px;
+}

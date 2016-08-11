@@ -155,9 +155,9 @@ def write_result(significanceDF, outdir, args):
     else: print('No significant genes for celltype')
 
     sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
+    significanceDF.heatmapdf_create(thres=(20,20))
+    significanceDF.plot_heatmap(outdir)
     if len(sigCelltypedf) > 1:
-        significanceDF.heatmapdf_create(thres=(20,20))
-        significanceDF.plot_heatmap(outdir)
         significanceDF.data4radarplot()
         sigCelltypedf.sort_values('genecluster', ascending=True)
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
