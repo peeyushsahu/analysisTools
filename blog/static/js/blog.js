@@ -19,14 +19,3 @@ function readtable4txt(file_path){
     console.log(d3.tsv.parseRows(data));
     });
 }
-
-$(document).ready(function() {
-    $('#example').DataTable( {
-        columns: [
-            { title: "celltype" },
-            { title: "genecluster" },
-            { title: "p-val" },
-            { title: "FDR" },
-        ]
-    } );
-} );

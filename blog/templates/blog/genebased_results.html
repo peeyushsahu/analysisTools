@@ -30,12 +30,15 @@
                  src="{% static rfolder|add:'/GCAM_redar.svg' %}" alt="Significant tissue type plot not created!!!" /><br>
         </div>
     </div>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
     <script>
+        //http://bl.ocks.org/ahmohamed/4c4980f31abdef64e7e2
         var file_path = "{% static rfolder|add:'/GCAM_sigCelltypes.tsv' %}";
 
         d3.text(file_path, function(data) {
         var parsedCSV = d3.tsv.parseRows(data);
+        console.log(parsedCSV);
+        var parsedCSV = parsedCSV.slice(0,10);
+        console.log(parsedCSV);
 
         var container = d3.select("#sigcelltype")
             .append("table")
@@ -51,7 +54,17 @@
                 .data(function(d) { return d; }).enter()
                 .append("td")
                 .text(function(d) { return d; });
-        console.log(container)
-    });
+        });
+
+        $(document).ready(function() {
+            $('#example').DataTable( {
+                columns: [
+                    { title: "celltype" },
+                    { title: "genecluster" },
+                    { title: "p-val" },
+                    { title: "FDR" }
+                ]
+            } );
+        } );
     </script>
 {% endblock %}
