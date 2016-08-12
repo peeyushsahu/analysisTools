@@ -47,8 +47,8 @@ def genebased(request):
             '''
             Here we will connect gcam
             '''
-            result_path = ganalysis.gcam_analysis(parameter, outpath='/home/sahu/Desktop/GCAM_test',
-                                                  resource_path='/home/sahu/Desktop/GCAM_test/resources', genelist=list(set(gene_list)))
+            result_path = ganalysis.gcam_analysis(parameter, outpath='/home/peeyush/Desktop/gcam_test_data',
+                                                  resource_path='/home/peeyush/Desktop/gcam_test_data/resources', genelist=list(set(gene_list)))
             result_folder = result_path.split('/')[-1].strip()
 
             return redirect('genebased_results', path=result_folder)
