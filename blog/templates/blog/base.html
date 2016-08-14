@@ -11,15 +11,16 @@
     <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="http://papaparse.com/resources/js/papaparse.js"></script>
     <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>-->
 
     <link rel="stylesheet" href="{% static 'css/blog.css' %}">
     <script type="text/javascript" src="{% static 'js/blog.js' %}"></script>
     <meta charset="UTF-8">
 </head>
 <body>
-    <div class="page-header">
+    <header>
         <h1>GCAM : Gene Cell-type Association Miner</h1>
-    </div>
+    </header>
     <div class="navbar">
          <ul>
           <li><a href="{% url 'blog.views.posts' %}">Home</a></li>
@@ -28,8 +29,10 @@
           <li style="float:right"><a class="active" href="{% url 'blog.views.contact' %}">Contact us</a></li>
          </ul>
     </div>
+    <div class="main">
     {% block content %}
     {% endblock %}
+    </div>
 </body>
 <div class="footer" align="center">
     <footer>

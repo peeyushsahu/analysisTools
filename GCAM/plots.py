@@ -453,7 +453,7 @@ def heatmap_Sigcelltype(args, df, path):
             xticklabels=True, linecolor='#ffffff',linewidths=0.01, square=True, annot=True)
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig(os.path.join(path, 'GCAM_cofficients.pdf'))
+        plt.savefig(os.path.join(path, 'GCAM_cofficients.svg'))
         plt.close()
     else:
         # creating df for heatmap
@@ -466,7 +466,7 @@ def heatmap_Sigcelltype(args, df, path):
             xticklabels=True, linecolor='#ffffff',linewidths=0.01, square=True, annot=True)
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig(os.path.join(path, 'GCAM_cofficients.pdf'))
+        plt.savefig(os.path.join(path, 'GCAM_cofficients.svg'))
         plt.close()
 
 #########################################

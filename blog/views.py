@@ -31,7 +31,8 @@ def genebased(request):
                     file = request.FILES['file']
                     gene_list = []
                     for gene in file:
-                        gene_list.append(gene)
+                        print(gene.decode('utf8').strip('\n'))
+                        gene_list.append(gene.decode('utf8').strip('\n'))
             except:
                 print('Give cell')
 
@@ -42,7 +43,7 @@ def genebased(request):
             #if synonym:
             species = request.POST.get('species', '')
             parameter.update({'org': species})
-            print(set(gene_list), only_key_celltypes, gene_cluster, synonym, species)
+            print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
             parameter.update({'genelist': list(set(gene_list)),'synonym': synonym,
                               'key_celltype_list': only_key_celltypes,
                               'celltypeClusterSize': int(gene_cluster)})
@@ -111,9 +112,14 @@ def exprbased(request):
                                                   resource_path='/home/peeyush/Desktop/gcam_test_data/resources')
             result_folder = result_path.split('/')[-1].strip()
             print(result_folder)
-            #return redirect('exprbased_results')  # path=result_folder
+            return redirect('exprbased_results', path=result_folder)  # path=result_folder
 
     return render(request, 'blog/exprbased.html', {'form': form})
+
+
+def exprbased_res(request, path):
+    print(path)
+    return render(request, 'blog/exprbased_results.html', {'rfolder': path})
 
 
 def read_file_as_dataframe(fileobj):

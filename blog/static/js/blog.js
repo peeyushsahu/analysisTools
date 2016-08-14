@@ -100,8 +100,13 @@ function show_control_sample_name(){
         $('#id_control_sample_name').attr('disabled', true);
 }
 
-
-
+$(window).scroll(function() {
+    if( $(this).scrollTop() > 150 ) {
+        $(".navbar").addClass("navbar-scrolled");
+    } else {
+        $(".navbar").removeClass("navbar-scrolled");
+    }
+});
 
 
 
