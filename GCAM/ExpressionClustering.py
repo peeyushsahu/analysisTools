@@ -160,7 +160,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
 
     # if args.remOverlapping:
     print('Removing overlap genes')
-    gene2cellCluster = find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clusterSize, args)
+    gene2cellCluster = find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clusterSize, path)
     cellexpr_dict = OrderedDict()
     for celltype, genelist in gene2cellCluster.items():
         if len(genelist) > 10:  # Minimum genes per celltype for comparision
@@ -181,7 +181,7 @@ def exprdf4plot(significanceDF, exprdata, phenodata, args, path=None, control=No
     return coffi4exprdf(sigCelltypedf, expr, path, args, control=control)
 
 
-def find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clustersize, args):
+def find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clustersize, path):
     import collections
     '''
     This function will give common significant genes from each celltype by camparing different celltype classes.
@@ -212,7 +212,7 @@ def find_unique_gene4sigcell(sigCelltypedf, cellgenedf, clustersize, args):
                     genelist4expr.setdefault(v['celltype'],[]).append(v['gene'])
                     break
     #print(genelist4expr)
-    myfile = open(os.path.join(args['outdir'], 'celltypeSign_new.txt'), 'w')
+    myfile = open(os.path.join(path, 'celltypeSign_new.txt'), 'w')
     myfile.write('celltype'+'\t'+'genes')
     for k, v in genelist4expr.items():
         myfile.write('\n'+k+'\t'+','.join(v))

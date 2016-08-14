@@ -24,7 +24,7 @@ h1 {
 h4 {
     font-family: 'Ubuntu';
     color: #0066cc;
-    font-size: 18pt;
+    font-size: 16pt;
 }
 
 .date {
@@ -125,7 +125,7 @@ h4 {
     position: absolute;
     background-position:center center;
     left: 40%;
-    top: 40%;
+    top: 50%;
     opacity: 1;
     width: 100%;
     z-index: 20;

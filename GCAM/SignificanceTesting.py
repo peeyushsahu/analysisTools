@@ -195,17 +195,19 @@ class SignificanceObject():
         sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
         length = len(sigcelltype[sigcelltype['p-val'] <= 0.05])
         # Significant celltype check
-        if length < 1:
-            raise ValueError('No siginificant celltypes.')
+        if length > 1:
+        #    raise ValueError('No siginificant celltypes.')
 
-        for k, v in sigcelltype.iterrows():
-            if v['p-val'] < 0.05/length:
-                sigcelltype.loc[k, 'FDR'] = v['p-val']*length
-            else:
-                sigcelltype.loc[k, 'FDR'] = 1
-        self.sigCelltypedf = sigcelltype
-        fsstop = timeit.default_timer()
-        logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
+            for k, v in sigcelltype.iterrows():
+                if v['p-val'] < 0.05/length:
+                    sigcelltype.loc[k, 'FDR'] = v['p-val']*length
+                else:
+                    sigcelltype.loc[k, 'FDR'] = 1
+            self.sigCelltypedf = sigcelltype
+            fsstop = timeit.default_timer()
+            logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
+        else:
+            logging.info('No siginificant celltypes....')
 
 
     def data4radarplot(self):

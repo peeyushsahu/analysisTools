@@ -11,7 +11,7 @@ import logging
 __author__ = 'peeyush'
 
 
-def gcam_analysis(args, outpath, resource_path, genelist=None):
+def gcam_analysis(args, outpath, resource_path):
     '''
     Main GCAM function.
     :param args:
@@ -31,12 +31,15 @@ def gcam_analysis(args, outpath, resource_path, genelist=None):
     write_parameter(args, outdir)
 
     if subcommand == 'genebased':
-        genenames = genelist
+        genenames = args['genelist']
         gene_based(args, resource_path, genenames, outdir)
 
     if subcommand == 'exprbased':
-        expressiondf = FilesFolders.read_expression_file(args['exppath'])
-        pheno_data = FilesFolders.read_pheno_data(args['phenopath'])
+        expressiondf = args['exppath']
+        expressiondf.index = expressiondf['SYMBOL']
+        expressiondf = expressiondf.drop('SYMBOL', axis=1)
+        print(expressiondf)
+        pheno_data = args['phenopath']
 
         if args['controlsample'] is not None and args['controlsample'] not in list(pheno_data['phenotype']):
             logging.error(args['controlsample']+": control sample name not found in phenotype list")
@@ -68,9 +71,10 @@ def write_parameter(args, outdir):
         parameter.write("Som grid size: "+str(args['som_gridsize'])+"\n")
         parameter.write("Minimum no of genes for cell fraction analysis: "+str(args['celltypeClusterSize'])+"\n")
         parameter.write("Regression method used: nuSVR \n")
-        parameter.write("Consider mean of all samples as reference: "+str(args['meanAsControl'])+"\n")
-        if not args['meanAsControl']:
+        if args['meanAsControl'] == 'sample':
             parameter.write("Control sample name: "+args['controlsample']+"\n")
+        else:
+            parameter.write("Consider mean of all samples as reference")
         parameter.close()
 
 
@@ -81,16 +85,6 @@ def warnings(args):
     '''
     subcommand=args['subcommand']
     if subcommand == 'exprbased':
-        if args.controlsample is None:
-            if not args['meanAsControl']:
-                logging.error("Control sample name is not selected.")
-                raise ValueError("Please specify control sample name OR set --meanAsControl, -m")
-
-        if not args['controlsample'] is None:
-            if args['meanAsControl']:
-                logging.error("Control sample selected and meanascontrol is on")
-                raise ValueError("Control sample selected, remove --meanAsControl or -m")
-
         userCelltype = args['selectCelltypes']
         if userCelltype is not None:
             userCelltype = [x.strip() for x in userCelltype.split(',')]
@@ -137,7 +131,7 @@ def gene_based(args, resource_path, genenames, outdir):
 
 def expr_based(outdir, expressiondf, pheno_data, args):
     # Expression analysis of celltype
-    return ExpressionClustering.SOMclustering(expressiondf, pheno_data, outdir, float(args.som_foldifference), iteration=int(args.somiter))
+    return ExpressionClustering.SOMclustering(expressiondf, pheno_data, outdir, float(args['som_foldifference']), iteration=int(args['somiter']))
 
 
 def write_result(significanceDF, outdir, args):
@@ -154,10 +148,11 @@ def write_result(significanceDF, outdir, args):
         filtereddf.to_csv(os.path.join(outdir, 'GCAM_sigenes.tsv'), sep='\t', index=False)
     else: print('No significant genes for celltype')
 
-    sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
     significanceDF.heatmapdf_create(thres=(20,20))
     significanceDF.plot_heatmap(outdir)
-    if len(sigCelltypedf) > 1:
+    sigCelltypedf = significanceDF.sigCelltypedf
+    if sigCelltypedf is not None:
+        sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
         significanceDF.data4radarplot()
         sigCelltypedf.sort_values('genecluster', ascending=True)
         plots.plot_celltypesignificance(outdir, sigCelltypedf, args)

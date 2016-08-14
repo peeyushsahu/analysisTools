@@ -30,12 +30,12 @@
                             {{ form.gene_cluster.errors }}
                             {{ form.gene_cluster }}<small><i> default value is 20</i></small><br><br>
                         </div>
-                        <div class="fieldWrapper post-form">
+                        <div class="fieldWrapper post-form" id="synonym" onclick="ifsynonym();">
                             <label for="{{ form.synonym.id_for_label }}">Consider synonym for input genes:</label>
                             {{ form.synonym.errors }}
                             {{ form.synonym }}<br><br>
                         </div>
-                        <div class="fieldWrapper post-form">
+                        <div class="fieldWrapper post-form" id="organism" style="visibility:hidden">
                             <label for="{{ form.species.id_for_label }}">if synonym, select organism:</label>
                             {{ form.species.errors }}
                             {{ form.species }}<br><br>
@@ -43,6 +43,7 @@
                     <button onclick="dim();" type="submit" class="save btn btn-default">Submit</button><br><br><br>
                     <div id="dimmer">
                         <div id="loading-img"><img src="{% static 'js/Leonardo.gif' %}" alt="Loader"/>
+                            <p><b>........Analysing data.......</b></p>
                         </div>
                     </div>
                 </form>
