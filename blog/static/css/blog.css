@@ -145,14 +145,14 @@ h4 {
     width:100%;
     height:100%;
     display:none;
-    z-index:9999; /* may not be necessary */
+    z-index:200; /* may not be necessary */
 }
 
 #loading-img {
     position: absolute;
     background-position:center center;
     left: 40%;
-    top: 50%;
+    top: 40%;
     opacity: 1;
     width: 100%;
     z-index: 150;
