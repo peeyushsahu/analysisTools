@@ -54,6 +54,7 @@ def gcam_analysis(args, outpath, resource_path):
     print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Finished')
+    FilesFolders.zipdir(outdir) # write zip dir of output folder for download
     return outdir
 
 

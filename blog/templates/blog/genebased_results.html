@@ -6,6 +6,11 @@
         <h1>GCAM genebased results</h1>
         <!--<h2 id="title" onclick="sayBye();">Hello</h2>-->
         <div class="result">
+
+            <p align="justify"> You can download result in a folder from
+                <a href="{% static rfolder|add:'.zip' %}" download>Download link</a>
+            </p>
+
             <h2>Gene-celltype enrichment heatmap</h2><br>
             <p align="justify">Heatmap shows association of cell-types for each gene in input query. Association is based
             on co-ocurrence of gene and cell-type in all abstracts gene is annotated.</p>
