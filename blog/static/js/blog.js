@@ -100,6 +100,7 @@ function show_control_sample_name(){
         $('#id_control_sample_name').attr('disabled', true);
 }
 
+
 $(window).scroll(function() {
     if( $(this).scrollTop() > 150 ) {
         $(".navbar").addClass("navbar-scrolled");
@@ -109,8 +110,9 @@ $(window).scroll(function() {
 });
 
 
-
-
+function upload_example_genebased(){
+    $('#id_gene_text_field').val("oct4\nsox2\ntrim71\nklf4\nc-myc\nn-myc\ncdkn1a\nAATF\nski\nRUNX1\np300");
+}
 
 
 

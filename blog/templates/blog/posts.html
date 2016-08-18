@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 {% extends 'blog/base.html' %}
-
 {% block content %}
-    {% for post in posts %}
+{% load static %}
     <div class="content container">
         <div class="row">
             <div class="col-md-8">
+                {% for post in posts %}
                 <div class="post">
                 <!--<p>published: {{ post.created_date }}</p>-->
-                <h2><a href="">{{post.title}}</a> </h2>
+                <h1>{{post.title}}</h1>
                 <p align="justify">{{ post.text|linebreaksbr }}</p>
                 </div>
+                {%  endfor %}
+                <img src="{% static 'gcam_overview.png' %}" width="100%"/>
             </div>
         </div>
     </div>
-    {%  endfor %}
 {% endblock %}

@@ -10,9 +10,12 @@
                     {% csrf_token %}
                     {{ form.non_field_errors }}
                         <div class="fieldWrapper post-form">
-                            <label for="{{ form.gene_text_field.id_for_label }}">Paste gene names:</label><br>
+                            <label for="{{ form.gene_text_field.id_for_label }}">Paste gene symbols):</label><br>
                             {{ form.gene_text_field.errors }}
                             {{ form.gene_text_field }}<br><br>
+                            <p onclick="upload_example_genebased()">
+                                <a href="#">Select example gene names for analysis.</a>
+                            </p>
                         </div>
                         <div class="fieldWrapper post-form-upload">
                             <label for="{{ form.file.id_for_label }}">Upload file:</label>

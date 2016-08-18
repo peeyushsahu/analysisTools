@@ -30,7 +30,7 @@ def genebased(request):
                     file = request.FILES['file']
                     gene_list = []
                     for gene in file:
-                        print(gene.decode('utf8').strip('\n'))
+                        #print(gene.decode('utf8').strip('\n'))
                         gene_list.append(gene.decode('utf8').strip('\n'))
             except:
                 print('Give cell')
@@ -42,7 +42,7 @@ def genebased(request):
             #if synonym:
             species = request.POST.get('species', '')
             parameter.update({'org': species})
-            print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
+            #print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
             parameter.update({'genelist': list(set(gene_list)),'synonym': synonym,
                               'key_celltype_list': only_key_celltypes,
                               'celltypeClusterSize': int(gene_cluster)})
@@ -75,10 +75,10 @@ def exprbased(request):
 
         if form.is_valid():
             exprDf = read_file_as_dataframe(request.FILES['exprfile'])
-            print(exprDf)
+            #print(exprDf)
 
             phenoDf = read_file_as_dataframe(request.FILES['phenofile'])
-            print(phenoDf)
+            #print(phenoDf)
             if not inspect_exprbased_dataframes(exprDf, phenoDf):
                 raise Http404("Column name mismatch b/w expression data and pheno data.")
 
