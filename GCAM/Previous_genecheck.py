@@ -24,7 +24,7 @@ def check_database_update(annoDB, cellDB, resource_path):
             #print 'check_database', int(line.split(':')[1])
         file.close()
         if annoDB_size not in size or cellDB_size not in size:
-            os.remove(resource_path + os.path.sep + 'gene_occu_db.csv')
+            os.remove(resource_path + os.path.sep + 'gene_occu_db.tsv')
             file = open(resource_path + os.path.sep + 'db_version', 'w')
             lines = ['annoDB:' + str(annoDB_size), '\ncellDB:' + str(cellDB_size)]
             file.writelines(lines)
@@ -48,11 +48,11 @@ def check_old_analysed_genes(genenames, dataframe):
     has_genes = []
     if not dataframe is None:
         for gene in genenames:
-            if gene not in dataframe.columns:
+            if gene not in dataframe.index:
                 new_genelist.append(gene)
-            if gene in dataframe.columns:
+            if gene in dataframe.index:
                 has_genes.append(gene)
-    foundgenes_df = dataframe[has_genes]
+    foundgenes_df = dataframe[dataframe.index.isin(has_genes)]
     return new_genelist, foundgenes_df
 
 
@@ -76,30 +76,36 @@ def occurrence_df(genenames, resource_path):
         foundgenes_df = pd.DataFrame()
         new_genenames = genenames
     print ('Reading required DBs')
-    occuDF = cellDB
     total_abstract = 0
     abs_in_DB = 0
     count = 0 + len(new_genenames)
+    occuDF = {}  #dict to store occurrence for each gene
+    active_ab_dict = {}  #dict to store active abstract for every gene
     for gene in new_genenames:
         sys.stdout.write("\rGenes remain for analyse:%d" % count)
         sys.stdout.flush()
         #print gene
         GeneObj = Fetch_pmids.Genes(gene=gene, resource_path=resource_path) #, subquery=subquery
         GeneObj.get_pmids()
+        active_ab_dict[gene] = len(GeneObj.pmids)
         total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
         GeneObj.get_pmid_pos(annoDB=annDB)
         abs_in_DB += len(GeneObj.cellinpmid)
-        occuDF = GeneObj.get_occurrence(cellDB=occuDF)
+        occuDict = GeneObj.get_occurrence(cellDB=cellDB)
+        occuDF.update(occuDict)
         count -= 1
-    joincellsynonym(occuDF, resource_path)
+    occuDF = joincellsynonym(occuDF, resource_path)
+    occuDataframe = pd.DataFrame.from_dict(occuDF, orient='index')
     if not created:
-        occuDF.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
+        occuDataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.tsv', sep='\t', index=True)
     if join:
         print("\nUpdating gene occurrence db....")
-        update_dataframe = pd.concat([occuDF.drop(['celltype'], axis=1), dataframe], axis=1)
-        update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.csv', sep=',', ignore_index=True)
-    occuDF = pd.concat([occuDF, foundgenes_df], axis=1)
+        update_dataframe = pd.concat([occuDataframe, dataframe], axis=0)
+        update_dataframe.to_csv(resource_path + os.path.sep + 'gene_occu_db.tsv', sep='\t', index=True)
+    occuDF = pd.concat([occuDataframe, foundgenes_df], axis=0)
+
     return occuDF
+
 
 def joincellsynonym(celloccu, resource_path):
     '''
@@ -109,19 +115,17 @@ def joincellsynonym(celloccu, resource_path):
     :return:
     '''
     cellSyn = FilesFolders.cell_synonym(resource_path)
-    colname = celloccu.columns.values.tolist()
-    indexRem = []
-    #print celloccu
-    for k, v in cellSyn.iterrows():
-        index = celloccu.celltype[celloccu.celltype == v['cell'].lower()].index.tolist()[0]
-        for cell in v['synonyms'].split(','):
-            #print cell
-            indexsyn = celloccu.celltype[celloccu.celltype == cell.lower()].index.tolist()[0]
-            indexRem.append(indexsyn)
-            ## adding synonym
-            for col in colname:
-                if col != 'celltype' and col != 'Unnamed: 0':
-                    celloccu.loc[index, col] = celloccu.loc[index, col] + celloccu.loc[indexsyn, col]
-    celloccu = celloccu.drop(celloccu.index[indexRem])
-    #print celloccu
+    #print (celloccu)
+    for gene, celldict in celloccu.items():
+        for k, v in cellSyn.iterrows():
+            index = v['cell'].lower()
+            #print(celldict)
+            #print(v['synonyms'].split(','))
+            for cell in v['synonyms'].split(','):
+                indexsyn = cell.lower()
+                ## adding synonym
+                #print(indexsyn)
+                celldict[index] = celldict[index] + celldict[indexsyn]
+                celldict.pop(indexsyn)
+    #print (celloccu)
     return celloccu

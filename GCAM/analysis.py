@@ -98,7 +98,6 @@ def gene_based(args, resource_path, genenames, outdir):
     organism = args['org']
     genenames = genenames
     primarygene = genenames
-    cellSyn = FilesFolders.cell_synonym(resource_path)
     binom_prob = FilesFolders.read_binom_prob(resource_path)
     pd.DataFrame(genenames, columns=['genenames']).to_csv(outdir + os.path.sep + 'input_gene_list.txt', sep='\t', encoding='utf-8', index=False)
 
@@ -107,24 +106,23 @@ def gene_based(args, resource_path, genenames, outdir):
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
         print ('Gene count after synonym:' + str(len(genenames)))
-    occuDF = Previous_genecheck.occurrence_df(genenames, resource_path) # subquery is deprecated
-    cellOccu = Occurrence.joincellsynonym(occuDF, cellSyn)
+    cellOccu = Previous_genecheck.occurrence_df(genenames, resource_path) # subquery is deprecated
+    #cellOccu = Previous_genecheck.joincellsynonym(occuDF, resource_path)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
 
     # Reduced celltypes
     if args['key_celltype_list']:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
-        cellOccu = cellOccu[cellOccu['celltype'].isin(key_celltypes)]
+        cellOccu = cellOccu[key_celltypes]
+        #print('-------------------------------------')
+    #print(cellOccu.head())
 
-    # print ('size of new df', len(cellOccu))
-    cellOccu = cellOccu.set_index(cellOccu['celltype'])
-    cellOccu = cellOccu.drop(['celltype'], axis=1)
     ocstop = timeit.default_timer()
     logging.info("TC in occurrence analysis:"+str(ocstop - ocstart)+'sec')
 
     # Scale df for heatmap and do further analysis
-    significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob, resource_path, outdir)
+    significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob, resource_path, outdir, args)
     significanceDF.fisher_occurrence_test()
     write_result(significanceDF, outdir, args)
     return significanceDF
@@ -149,14 +147,21 @@ def write_result(significanceDF, outdir, args):
         filtereddf.to_csv(os.path.join(outdir, 'GCAM_sigenes.tsv'), sep='\t', index=False)
     else: print('No significant genes for celltype')
 
-    significanceDF.heatmapdf_create(thres=(20,20))
+    significanceDF.heatmapdf_create()
     significanceDF.plot_heatmap(outdir)
+    significanceDF.heatmapdf.to_csv(os.path.join(outdir, 'GCAM_heatmap_df.tsv'), sep='\t')
+    significanceDF.occurrencedf.to_csv(os.path.join(outdir, 'GCAM_occurence_df.tsv'), sep='\t')
+
     sigCelltypedf = significanceDF.sigCelltypedf
     if sigCelltypedf is not None:
-        sigCelltypedf = significanceDF.sigCelltypedf[significanceDF.sigCelltypedf['FDR'] < 0.05]
+        #sigCelltypedf = sigCelltypedf[sigCelltypedf['binom_pval'] < 0.05]
         significanceDF.data4radarplot()
-        sigCelltypedf.sort_values('genecluster', ascending=True)
-        plots.plot_celltypesignificance(outdir, sigCelltypedf, args)
+
+        sigCelltypedf = sigCelltypedf.sort_values('genecluster', ascending=False)
+        sigCelltypedf.index = range(len(sigCelltypedf))
+        sigCelltypedf = sigCelltypedf[:20]
+        sigCelltypedf = sigCelltypedf.sort_values('genecluster', ascending=True)
+        plots.plot_celltypesignificance(outdir, sigCelltypedf)
         #sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
         sigCelltypedf.to_csv(os.path.join(outdir, 'GCAM_sigCelltypes.tsv'), sep='\t', index=False)
     else: print('No significant celltypes')
@@ -169,12 +174,10 @@ def filter_df(df):
     :return:
     '''
     new_df = pd.DataFrame(columns=df.columns)
-    df_gr = df.groupby('gene')
+    df_gr = df.groupby('celltype')
     for k, gr in df_gr:
         new_gr = gr.sort_values('p-val', ascending=True)
-        rows = 1
         for i, r in new_gr.iterrows():
-            if rows <= 3:
+            if r['p-val'] <= 0.05:
                 new_df = new_df.append(r)
-                rows += 1
     return new_df

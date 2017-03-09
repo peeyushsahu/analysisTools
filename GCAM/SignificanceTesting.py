@@ -6,19 +6,20 @@ import os
 import logging, timeit
 from GCAM import FilesFolders as read
 from GCAM import plots
-
+import seaborn as sns
 
 
 class SignificanceObject():
     '''
     This Object will hold dataframes used and created in analysis
     '''
-    def __init__(self, occurrencedf, binom_prob, resourcepath, outdir, heatmapdf=None):
+    def __init__(self, occurrencedf, binom_prob, resourcepath, outdir, args, heatmapdf=None):
         self.outdir = outdir
         self.resourcepath = resourcepath
         self.occurrencedf = occurrencedf
         self.binom_prob = binom_prob
         self.heatmapdf = heatmapdf
+        self.args = args
         self.filheatmapdf = None
         self.pvaldf = None
         self.adjpvaldf = None
@@ -26,28 +27,26 @@ class SignificanceObject():
         self.sigCelltypedf = None
         self.binom_pval_df = None
 
-    def heatmapdf_create(self, thres):
+    def heatmapdf_create(self):
         '''
         This function will generate df for HeatMap by scaling the occurrencedf
         '''
         occurrencedf = self.occurrencedf
-        transposedf = pd.DataFrame.transpose(occurrencedf)
-        #print transposedf.head()
-        scaled_df = scale_dataframe(transposedf)
-        #print scaled_df.head()
-        #print occurrencedf.index
-        #print scaled_df
-        scaled_df.columns = occurrencedf.index
-        scaled_df = scaled_df.set_index(occurrencedf.columns)
+        scaled_df = scale_dataframe(occurrencedf)
+        scaled_df.columns = occurrencedf.columns
+        scaled_df = scaled_df.set_index(occurrencedf.index)
         self.heatmapdf = scaled_df
-        self.filter_heatmapdf(thres=thres)
+        self.filter_heatmapdf()
 
-    def filter_heatmapdf(self, thres=(20,20)):
+    def filter_heatmapdf(self):
         '''
         This method filters rows and columns with sum < 1 in HeatMapdf
         '''
         df = self.heatmapdf
-        self.filheatmapdf = df.loc[df.sum(1) > thres[0], df.sum(0) > thres[1]]
+        filheatmapdf = df.loc[df.sum(1) > 10, df.sum(0) > 100]
+        #filheatmapdf.index = range(len(filheatmapdf))
+        #print(filheatmapdf.head())
+        self.filheatmapdf = filheatmapdf
 
     def plot_heatmap(self, path):
         '''
@@ -57,10 +56,22 @@ class SignificanceObject():
         :param path:
         :return:
         '''
-        hclustHeatmap = HiearchicalHeatmap()
-        hclustHeatmap.frame = self.filheatmapdf
-        hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
-        fig, axm, axcb, cb = hclustHeatmap.plot()
+        #hclustHeatmap = HiearchicalHeatmap()
+        #hclustHeatmap.frame = self.filheatmapdf
+        #hclustHeatmap.path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
+        #fig, axm, axcb, cb = hclustHeatmap.plot()
+        dataframe = self.filheatmapdf
+        path = os.path.sep.join([path, 'GCAM_heatMap.svg'])
+        sns.set(context="talk")
+        cmap = sns.diverging_palette(250, 10, as_cmap=True)
+        if len(dataframe) > 30:
+            ax = sns.clustermap(dataframe, cmap=cmap, yticklabels=False)
+            ax.ax_heatmap.set_ylabel('Genes')
+        else:
+            ax = sns.clustermap(dataframe, cmap=cmap)
+            for ticks in ax.ax_heatmap.get_yticklabels():
+                ticks.set_rotation(0)
+        ax.savefig(path)
 
     def filter_occuDf(self):
         '''
@@ -87,12 +98,17 @@ class SignificanceObject():
         self.filter_occuDf()
         occu_df = self.occurrencedf
         binom_prob = self.binom_prob
+        if self.args['key_celltype_list']:
+            key_celltypes = read.key_celltypes(self.resourcepath)
+            binom_prob = binom_prob[binom_prob['celltype'].isin(key_celltypes)]
+            binom_prob.index = range(len(binom_prob))
+            self.binom_prob = binom_prob
+
         pvaldf = pd.DataFrame()
         binom_pvaldf = pd.DataFrame()
-        adjpvaldf = pd.DataFrame()
         enrichmentdf = pd.DataFrame()
         matsum = occu_df.sum().sum()
-        #print occu_df.head()
+        #print (occu_df.head())
         for k, v in occu_df.iterrows():
             key = v.keys()
             rowsum = v.sum()
@@ -107,10 +123,13 @@ class SignificanceObject():
                         ## Fisher p-value is calcualted but not put in the table
                         oddsratio, pval = stats.fisher_exact([[value, colsum], [rsum, matsum-(value+rsum+colsum)]],
                                                              alternative='greater')
-                        celltype = k
+                        celltype = key[i]
                         index = binom_prob[binom_prob['celltype'] == celltype].index.tolist()
-                        b_pval = stats.binom.sf(value, colsum+value, binom_prob.iloc[index[0], 3])
-
+                        background_prob = binom_prob.iloc[index[0], 1] / sum(binom_prob['occurrence'])
+                        #print(binom_prob.iloc[index[0], 1], sum(binom_prob['occurrence']), background_prob)
+                        #print(celltype, index, value, rsum+value)
+                        #print(binom_prob.head())
+                        b_pval = stats.binom_test(value, rsum+value, background_prob, alternative='greater')
                     else:
                         pval = 1
                         b_pval = 1
@@ -123,25 +142,8 @@ class SignificanceObject():
                     enrichmentdf.loc[k, key[i]] = 0
         ## adj p-val calcualtion
         #print(binom_pvaldf.head())
-        for k, v in binom_pvaldf.iterrows():
-            for i in range(0, v.shape[0]):
-                key = v.keys()
-                value = v[i]
-                if value != 1:
-                    #print(key[i])
-                    #print(len(binom_pvaldf[binom_pvaldf[key[i]] < 0.05]))
-                    sigCelltype = len(binom_pvaldf[binom_pvaldf[key[i]] < 0.05])
-                    #print(sigCelltype)
-                    if value < 0.05/sigCelltype:
-                        adjpvaldf.loc[k, key[i]] = value*sigCelltype
-                    else:
-                        adjpvaldf.loc[k, key[i]] = 1
-                else:
-                    adjpvaldf.loc[k, key[i]] = 1
-        #print binom_pvaldf
         self.binom_pval_df = binom_pvaldf
         self.pvaldf = pvaldf
-        self.adjpvaldf = adjpvaldf
         fsstop = timeit.default_timer()
         logging.info('TC in sig occur test:'+str(fsstop-fsstart)+'sec')
         self.celltype_overrepresntation_list(enrichmentdf)  #### def()
@@ -153,13 +155,20 @@ class SignificanceObject():
         significance = 1
         column = ['celltype', 'gene', 'enrichment', 'p-val', 'FDR']
         cellgenedf = pd.DataFrame()
-        for celltype, v in self.binom_pval_df.iterrows():
-            for gene, pval in v.iteritems():
+        #print(self.binom_pval_df.head())
+        for gene, celltype in self.binom_pval_df.iterrows():
+            for cell, pval in celltype.iteritems():
                 if pval < significance:
-                    cellgenedf = cellgenedf.append(pd.Series([celltype, gene, enrichmentdf.loc[celltype, gene], pval,
-                                                         self.adjpvaldf.loc[celltype, gene]]), ignore_index=True)
+                    cellgenedf = cellgenedf.append(
+                        pd.Series([cell, gene, enrichmentdf.loc[gene, cell], pval, 0]), ignore_index=True)
         #print cellgenedf.head(10)
         cellgenedf.columns = column
+        cellgenedf = cellgenedf.sort_values(['celltype', 'p-val'], ascending=[True, True])
+        cellgenedf.index = range(len(cellgenedf))
+        for ind, row in cellgenedf.iterrows():
+            fdr = (row['p-val'] * len(cellgenedf)) / (ind + 1)
+            cellgenedf.iloc[ind, 4] = fdr
+
         print('cellgenedf shape:', cellgenedf.shape)
         #cellgenedf = self.filter_df(cellgenedf)
         self.cellgenedf = cellgenedf
@@ -177,37 +186,74 @@ class SignificanceObject():
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['p-val'] <= 0.05])
+        c = len(cellgenedf[cellgenedf['FDR'] <= 0.01])
         d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
         #print(c,d)
         for celltype, val in cellgroup:
             #print celltype
-            if len(val[val['p-val'] <= 0.001]) > 1:
+            if len(val[val['FDR'] <= 0.01]) > 1:
                 #print val
-                a = len(val[val['p-val'] <= 0.001])
-                b = len(val) - a
-                cc = c - a
-                dd = d - (a+b+cc)
+                a = len(val[val['FDR'] <= 0.01])
+                b = len(val) #- a
+                cc = c #- a
+                dd = d #- (a+b+cc)
                 #print a, ':', b, ':', cc, ':', dd, c, d
-                oddsRatio, p = stats.fisher_exact([[a, b], [cc, dd]])
+                p = stats.chi2_contingency([[b, dd], [a, cc]])[1]
                 #print 'celltype:'+celltype, a, p
                 sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
         sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
         length = len(sigcelltype[sigcelltype['p-val'] <= 0.05])
         # Significant celltype check
+        sigcelltype.loc[:, 'FDR'] = 1
         if length > 1:
-        #    raise ValueError('No siginificant celltypes.')
-
+        #   raise ValueError('No siginificant celltypes.')
             for k, v in sigcelltype.iterrows():
                 if v['p-val'] < 0.05/length:
                     sigcelltype.loc[k, 'FDR'] = v['p-val']*length
                 else:
                     sigcelltype.loc[k, 'FDR'] = 1
-            self.sigCelltypedf = sigcelltype
             fsstop = timeit.default_timer()
             logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
         else:
             logging.info('No siginificant celltypes....')
+        print('Sig cell type', sigcelltype)
+        self.sigCelltypedf = sigcelltype
+        self.binom_significant_celltypes()
+
+    def binom_significant_celltypes(self):
+        '''
+        This will do binomial test for significant celltype enrichment and add column to sigCelltypedf dataframe.
+        '''
+        sigcelltype = self.sigCelltypedf
+        occurenceDF = self.occurrencedf
+        binom_prob = self.binom_prob
+        occu_colsum = occurenceDF.sum(axis=0)
+        occu_dfsum = occu_colsum.sum()
+        #print(sigcelltype.head())
+        sigcelltype.loc[:, 'binom_pval'] = 1
+        col = sigcelltype.columns.get_loc('binom_pval')
+        #print(sigcelltype['celltype'])
+        for cell, occu in occu_colsum.iteritems():
+            if cell in list(sigcelltype['celltype']):
+                ind = sigcelltype[sigcelltype['celltype'] == cell].index[0]
+                bprob_ind = binom_prob[binom_prob['celltype'] == cell].index[0]
+                background_prob = binom_prob.iloc[bprob_ind, 1] / sum(binom_prob['occurrence'])
+                print(binom_prob.iloc[bprob_ind, 1], sum(binom_prob['occurrence']), background_prob)
+                b_pval = stats.binom_test(occu, occu_dfsum, background_prob, alternative='greater')
+                #print(cell, occu, occu_dfsum, self.binom_prob.iloc[bprob_ind, 3])
+                sigcelltype.iloc[ind, col] = b_pval
+
+        sigcelltype.loc[:, 'binom_FDR'] = 1
+        ind_fdr = sigcelltype.columns.get_loc('binom_FDR')
+        sigcelltype = sigcelltype.sort('binom_pval', ascending=True)
+        sigcelltype.index = range(len(sigcelltype))
+
+        for ind, row in sigcelltype.iterrows():
+            fdr = (row['binom_pval'] * len(sigcelltype)) / (ind + 1)
+            sigcelltype.iloc[ind, ind_fdr] = fdr
+
+        print('Sig cell type', sigcelltype)
+        self.sigCelltypedf = sigcelltype
 
 
     def data4radarplot(self):
@@ -268,8 +314,11 @@ def scale_dataframe(df):
             old_min = min(v)
             old_max = max(v)
             if not isinstance(val, str):
-                #print val
-                rows.append(scale(val, (old_min, old_max), (new_min, new_max)))
+                if val == 0:
+                    rows.append(0)
+                else:
+                    sc_val = scale(val, (old_min, old_max), (new_min, new_max))
+                    rows.append(sc_val)
                 #rows.append(float(val)/v.sum())
         list_of_rows.append(rows)
     return pd.DataFrame(data=list_of_rows)

@@ -14,7 +14,7 @@
             <h2>Gene-celltype enrichment heatmap</h2><br>
             <p align="justify">Heatmap shows association of cell-types for each gene in input query. Association is based
             on co-ocurrence of gene and cell-type in all abstracts gene is annotated.</p>
-            <img class="warnings" style="width: 80%; height: 80%;"
+            <img class="warnings" style="width: 50%; height: 50%;"
                  src="{% static rfolder|add:'/GCAM_heatMap.svg' %}" alt="Gene-celltype enrichment heatmap not found!!!" /><br>
 
             <h2>Significant celltypes</h2>
@@ -27,7 +27,7 @@
             <p align="justify">Celltype significance plot visualizes enriched celltypes within the selected gene names.
             Y-axis represent number of genes associated with cell-type and respective circle size represent significance.
             <b>Red dotted line represent celltype with at-least provided gene cluster size (default:20)</b>.</p>
-            <img class="warnings" style="width: 80%; height: 80%;"
+            <img class="warnings" style="width: 50%; height: 50%;"
                  src="{% static rfolder|add:'/GCAM_SigCelltype.svg' %}" alt="No significant celltype were found!!!" /><br>
 
             <h2>Significant tissue type plot</h2>
@@ -40,7 +40,7 @@
     <script>
         //http://bl.ocks.org/ahmohamed/4c4980f31abdef64e7e2
         var file_path = "{% static rfolder|add:'/GCAM_sigCelltypes.tsv' %}";
-        //console.log(file_path);
+        console.log(file_path);
         readtable(file_path, '#sigcelltype')
 
     </script>

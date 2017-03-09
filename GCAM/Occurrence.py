@@ -18,14 +18,14 @@ def gene2synonym(geneList, geneSyn):
                     newGeneList.append(syn.strip().lower())
     return newGeneList
 
-
+'''
 def get_occurrence(genes_dict, cellDB):
-    '''
+
     Calculate celltype occurrence for each gene.
     :param genes_dict:
     :param cellDB:
     :return:
-    '''
+
     celloccu = cellDB
     for k, v in genes_dict.iteritems():
         celloccu[k] = 0
@@ -36,28 +36,8 @@ def get_occurrence(genes_dict, cellDB):
                     celloccu.loc[index, k] += 1
     celloccu['celltype'] = celloccu['celltype'].str.lower()
     return celloccu
+'''
 
-def joincellsynonym(celloccu, cellSyn):
-    '''
-    Join multiple cell synonym to one.
-    :param celloccu:
-    :param cellSyn:
-    :return:
-    '''
-    colname = celloccu.columns.values.tolist()
-    indexRem = []
-    #print colname
-    for k, v in cellSyn.iterrows():
-        index = celloccu.celltype[celloccu.celltype == v['cell'].lower()].index.tolist()[0]
-        for cell in v['synonyms'].split(','):
-            #print cell
-            indexsyn = celloccu.celltype[celloccu.celltype == cell.lower()].index.tolist()[0]
-            indexRem.append(indexsyn)
-            for col in colname:
-                if col != 'celltype' and col != 'Unnamed: 0':
-                    celloccu.loc[index, col] = celloccu.loc[index, col] + celloccu.loc[indexsyn, col]
-    celloccu = celloccu.drop(celloccu.index[indexRem])
-    return celloccu
 
 def joingenesynonym(colloccu, primarygemename, geneSyn):
     '''
@@ -80,11 +60,12 @@ def joingenesynonym(colloccu, primarygemename, geneSyn):
     #print 'Shape of df after gene merge:', colloccu.shape
     return colloccu
 
+'''
 def subtract_cellnamepeat(celloccu, path):
-    '''
+
     This will subtract count from ex. t lymphocyte that belongs to cd4 t cells
     :return:
-    '''
+
     subtract_df = FilesFolders.read_cell_subtractdf(path)
     colnames = celloccu.columns
     #print celloccu.index
@@ -98,3 +79,4 @@ def subtract_cellnamepeat(celloccu, path):
                     celloccu.loc[v['celltype'], gene] = celloccu.loc[v['celltype'], gene] - celloccu.loc[cell, gene]
     #print celloccu
     return celloccu
+'''

@@ -204,6 +204,8 @@ class HiearchicalHeatmap():
 
         # Plot color legend #
         ### axes for colorbar
+        # axcb - placement of the color legend #
+        [axcb_x, axcb_y, axcb_w, axcb_h] = [0.07, 0.88, 0.18, 0.09]
         axcb = fig.add_axes([axcb_x, axcb_y, axcb_w, axcb_h], frame_on=False)
         cb = matplotlib.colorbar.ColorbarBase(axcb, cmap=cmap, norm=norm, orientation='horizontal')
         axcb.set_title("colorkey", fontsize=4)
@@ -472,106 +474,43 @@ def heatmap_Sigcelltype(args, df, path):
 #########################################
 
 
-def plot_celltypesignificance(path, plotdf, args):
+def plot_celltypesignificance(path, plotdf):
     import matplotlib.pyplot as plt
+    import seaborn as sns
     import numpy as np
     import sys
+    sns.set(context='talk', style='white')
+    plt.figure(figsize=(6,8))
     print ('plotting celltype significance plot')
     #plotdf = plotdf[(plotdf['genecluster'] >= 5)]
     if len(plotdf) < 1:
         sys.exit('Not enough genes for significant celltype plot, please see results at the GCAM_sigenes.xls')
-    if args['subcommand'] == 'exprbased':
-        plotdf = plotdf.sort_values('p-val',ascending=True)
-    l = np.log2(plotdf['genecluster'].tolist())
-    t = plotdf['p-val'].tolist()
-    s = range(1, len(plotdf)+1)
+    #plotdf = plotdf.sort_values('p-val',ascending=True)
+    l = plotdf['genecluster'] / plotdf['genecluster'].sum()
+    t = np.log10(plotdf['binom_pval'].tolist())
+    S = range(1, len(plotdf)+1)
+    #s = np.log10(plotdf['binom_pval'].tolist())
     name = plotdf['celltype'].tolist()
-    area = [abs((np.log10(x)) * 15) for x in t]
-    color = np.random.random(len(t))
-    #print area
-    #plt.figure()
-    plt.scatter(s, l, s=area, c=color, alpha=0.5)
-    plt.grid(True, linestyle=':', color='black')
-
-    # draw a thick red hline at y=0 that spans the xrange
-    thres = np.log2(args['celltypeClusterSize'])
-    if thres < min(l): thres = min(l)
-    h = plt.axhline(linewidth=1, color='r', y=thres, linestyle='--') #y=args.celltypeClusterSize
-
-    for i in range(0, len(t)):
-        plt.annotate(name[i], xy=(s[i], l[i]), xycoords='data',
-            xytext=(0,15), textcoords='offset points',
-            ha='center', va='bottom',
-            bbox=dict(boxstyle='round, pad=0.2', fc='yellow', alpha=0.2),
-            fontsize=10)
-## plot legend
+    area = plotdf['genecluster']*10
+    ckey = sns.color_palette("RdBu_r", len(plotdf))[::-1]
+    color = [ckey[i] for i in plotdf.index]
+    plt.scatter(l, S, s=area, c=color, alpha=0.7)
+    plt.yticks(S, name, rotation='horizontal')
+    plt.gca().yaxis.grid(True, linestyle=':')
+    #plt.grid(True, linestyle=':', color='black')
+    ## plot legend
     l1 = plt.scatter([],[], s=50, c='gray', alpha=0.5)
-    l2 = plt.scatter([],[], s=200, c='gray', alpha=0.5)
-    labels = ["less significant", "highly significant"]
-    plt.legend([l1, l2], labels, ncol=2, frameon=True, fontsize=8,
+    l2 = plt.scatter([],[], s=100, c='gray', alpha=0.5)
+    labels = ["low gene-count", "high gene-count"]
+    plt.legend([l1, l2], labels, ncol=1, frameon=True, fontsize=8,
     handlelength=2, loc = 4, borderpad = 0.5,
     handletextpad=1, scatterpoints = 1)
-
-    plt.tick_params(axis='both', labelsize=8)
-    plt.xlim(0, len(plotdf)+2)
-    plt.ylim(min(l)-0.2, max(l)+0.2)
+    plt.tick_params(axis='both', labelsize=12)
+    #plt.ylim(0, len(plotdf)+2)
+    plt.xlim(0, max(l)+max(l)/10)
     plt.title('Cell-type significance', fontsize=14)
-    plt.xlabel('Celltypes', fontsize=12)
-    plt.ylabel('log2 Gene cluster size', fontsize=12)
+    plt.xlabel('GeneRatio', fontsize=12)
+    #plt.ylabel('log2 Gene cluster size', fontsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(path, 'GCAM_SigCelltype.svg'))
     plt.clf()
-
-'''
-def heatmap_Sigcelltype(df, path, edgecolors='w', log=False):
-
-    :param df:
-    :param edgecolors:
-    :param log:
-    :return:
-    import matplotlib.colors as mcolors
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    width = len(df.columns)/7*10
-    height = len(df.index)/7*10
-
-    fig, ax = plt.subplots(figsize=(20,10))#(figsize=(width,height))
-    dfMax = max(df.max()) + max(df.max())/15
-    dfSize = np.linspace(0, dfMax, num=15)
-    #print dfSize
-    cmap, norm = mcolors.from_levels_and_colors(dfSize, ['#3e7d00', '#579619', '#a2c57f', '#b4d099', '#c7dcb2',
-                                                         '#d9e7cc', '#ecf3e5', '#ffffff', '#fae5e5', '#f5cccc',
-                                                         '#f0b2b2', '#eb9999', '#e67f7f', '#d21919'] ) # ['MidnightBlue', Teal]['Darkgreen', 'Darkred']
-    heatmap = ax.pcolor(df,
-                        edgecolors=edgecolors,  # put white lines between squares in heatmap
-                        cmap=cmap,
-                        norm=norm)
-    data = df.values
-    for y in range(data.shape[0]):
-        for x in range(data.shape[1]):
-            plt.text(x + 0.5 , y + 0.5, '%.4f' % data[y, x], #data[y,x] +0.05 , data[y,x] + 0.05
-                 horizontalalignment='center',
-                 verticalalignment='center',
-                 size=10,
-                 color='b')
-
-    ax.autoscale(tight=True)  # get rid of whitespace in margins of heatmap
-    ax.set_aspect('equal')  # ensure heatmap cells are square
-    ax.xaxis.set_ticks_position('top')  # put column labels at the top
-    ax.tick_params(bottom='off', top='off', left='off', right='off')  # turn off ticks
-
-    ax.set_yticks(np.arange(len(df.index)) + 0.5)
-    ax.set_yticklabels(df.index, size=15)
-    ax.set_xticks(np.arange(len(df.columns)) + 0.5)
-    ax.set_xticklabels(df.columns, rotation=90, size= 15)
-
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    divider = make_axes_locatable(ax)
-    #cax = divider.append_axes("right", "3%", pad="1%")
-    #fig.colorbar(heatmap, cax=cax)
-    plt.tight_layout()
-    plt.savefig(os.path.join(path, 'GCAM_heatmap_SigCelltype.svg'))
-    plt.clf()
-    plt.close()
-'''

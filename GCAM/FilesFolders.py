@@ -99,7 +99,6 @@ def celltype_DB(path):
     Import celltype database.
     :param path:
     :return:
-    '''
     try:
         cellDB = read_csv(path + os.path.sep + 'cellTypes.csv', header=None, sep=',')
     except:
@@ -108,6 +107,19 @@ def celltype_DB(path):
     cellDB['celltype'] = cellDB['celltype'].str.lower()
     #print cellDB
     return cellDB
+    '''
+    celltypeList = []
+    try:
+        with open(path + os.path.sep + 'cellTypes.txt') as file:
+            for celltype in file:
+                celltype = celltype.rstrip()
+                if len(celltype) > 0:
+                    celltypeList.append(celltype.lower())
+    except:
+        raise ValueError("celltype db does not exist.")
+    celltypeList = list(set(celltypeList))
+    #print (celltypeList)
+    return celltypeList
 
 
 def cell2tissue_DB(path):
@@ -226,7 +238,7 @@ def read_previous_occurrence_table(resource_path):
     '''
     try:
         print ('reading previously analysed genes')
-        gene_occu_db = read_csv(os.path.join(resource_path, 'gene_occu_db.csv'), header=0, sep=",", index_col=0)
+        gene_occu_db = read_csv(os.path.join(resource_path, 'gene_occu_db.tsv'), header=0, sep="\t", index_col=0)
     except:
         print ("Warning: Creating Gene occurrence db, analysis will take longer.")
         return None, False

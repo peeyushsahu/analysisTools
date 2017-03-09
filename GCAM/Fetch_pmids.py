@@ -1,6 +1,7 @@
 __author__ = 'peeyush'
 from GCAM import FilesFolders
 
+
 class Genes():
     def __init__(self, gene, subquery=None, resource_path=None):
         self.gene = gene
@@ -9,7 +10,6 @@ class Genes():
         self.cellinpmid = None
         self.occurrence = None
         self.resource_path = resource_path
-
 
     def get_pmids(self):
         '''
@@ -22,7 +22,7 @@ class Genes():
         Entrez.email = "peeyush215@gmail.com"
         if subquery:
             newsubquery = subquery.strip().replace(',', ' AND ')
-            query = gene +' AND '+ newsubquery
+            query = gene + ' AND ' + newsubquery
             data = Entrez.esearch(db="pubmed", retmax=15000, term=query)
             res = Entrez.read(data)
             PMID = res["IdList"]
@@ -34,7 +34,7 @@ class Genes():
             PMID = res["IdList"]
             #print 'Pubmed ids for '+gene+':', len(PMID)
             self.pmids = PMID
-
+        print('Gene:', gene, ' Lenght of pmid:', len(PMID))
 
     def get_pmid_pos(self, annoDB):
         celltype_list = []
@@ -43,7 +43,6 @@ class Genes():
                 celltype_list.append(annoDB.loc[int(pmid)][0])
         self.cellinpmid = celltype_list
 
-
     def get_occurrence(self, cellDB):
         '''
         Calculate celltype occurrence for each gene.
@@ -51,43 +50,32 @@ class Genes():
         :param cellDB:
         :return:
         '''
-        celloccu = cellDB
+        celloccu = dict.fromkeys(cellDB, 0)
         # print cellDB
-        celloccu[self.gene] = 0
-        #print 'Gene:', self.gene
         celltype = self.cellinpmid
-        #file = open('/home/peeyush/Desktop/gcam_test_data/test_3/b_cell.txt', 'w')
-        for found in celltype:
-            for index, cells in celloccu.iterrows():
-                if cells['celltype'].lower() in found.lower():
-                    celloccu.loc[index, self.gene] += 1
-                    #file.write(cells['celltype'] + '-' + found+'\n')
-        celloccu['celltype'] = celloccu['celltype'].str.lower()
-        #file.close()
-        celloccu = subtract_cellnamepeat(celloccu, self.resource_path, self.gene)
-        return celloccu
+        for cells in cellDB:
+            for found in celltype:
+                if cells in found.lower():
+                    occu = found.lower().count(cells)
+                    celloccu[cells] += occu
 
-def subtract_cellnamepeat(celloccu, path, gene):
+            #print('Cell typ:', cells, ' Cell count:', celloccu[cells], ' abs count:', abs_count)
+        #print(celloccu)
+        celloccu = subtract_cellnamepeat(celloccu, self.resource_path)
+        return {self.gene: celloccu}
+
+
+def subtract_cellnamepeat(celloccu, path):
     '''
     This will subtract count from ex. t lymphocyte that belongs to cd4 t cells
     :return:
     '''
 
     subtract_df = FilesFolders.read_cell_subtractdf(path)
-    colnames = celloccu.columns
-    #print list(celloccu['celltype'])
-    #print subtract_df
-    #print colnames
     for k, v in subtract_df.iterrows():
         for cell in v['subs'].split(','):
-            cell = cell.lower()
-            #print v['celltype'], celloccu['celltype'][celloccu['celltype']==v['celltype']].index[0]
-            #print cell, celloccu['celltype'][celloccu['celltype']==cell].index[0]
-            cell_ind = celloccu['celltype'][celloccu['celltype']==cell].index[0]
-            index = celloccu['celltype'][celloccu['celltype']==v['celltype']].index[0]
-            #if celloccu.loc[index, gene] > 0:
-            celloccu.loc[index, gene] = celloccu.loc[index, gene] - celloccu.loc[cell_ind, gene]
-    #print celloccu
+            celloccu[v['celltype']] = celloccu[v['celltype']] - celloccu[cell.lower()]
+    #print (celloccu)
     return celloccu
 
 

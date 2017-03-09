@@ -71,7 +71,9 @@ function readtable(file_path, divid){
                 { title: "celltype" },
                 { title: "genecluster" },
                 { title: "p-val" },
-                { title: "FDR" }
+                { title: "FDR" },
+                { title: "binom_pval" },
+                { title: "binom_FDR" }
             ]
         } );
     } );
