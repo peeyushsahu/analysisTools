@@ -44,8 +44,7 @@ def genebased(request):
             parameter.update({'org': species})
             #print(gene_list, only_key_celltypes, gene_cluster, synonym, species)
             parameter.update({'genelist': list(set(gene_list)),'synonym': synonym,
-                              'key_celltype_list': only_key_celltypes,
-                              'celltypeClusterSize': int(gene_cluster)})
+                              'key_celltype_list': only_key_celltypes})
             # This will take some time to  redirect
             #time.sleep(10)
             '''

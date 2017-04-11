@@ -5,17 +5,6 @@ import time
 
 
 def create_folders(path):
-    '''
-    folders = ["overlap",
-               "differential",
-               "filtered",
-               "plots",
-               "seq4motif",
-               "valley_peaks",
-               "CpG",
-               "density_based_motif"]
-    for folder in folders:
-    '''
     print ('Output directory created: ' + os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S"))))
     npath = os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S")))
     if not os.path.exists(npath):

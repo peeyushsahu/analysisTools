@@ -10,7 +10,7 @@
                     {% csrf_token %}
                     {{ form.non_field_errors }}
                         <div class="fieldWrapper post-form">
-                            <label for="{{ form.gene_text_field.id_for_label }}">Paste gene symbols):</label><br>
+                            <label for="{{ form.gene_text_field.id_for_label }}">Paste gene symbols:</label><br>
                             {{ form.gene_text_field.errors }}
                             {{ form.gene_text_field }}<br><br>
                             <p onclick="upload_example_genebased()">
@@ -27,11 +27,6 @@
                             <label for="{{ form.only_key_celltypes.id_for_label }}">Analyse only key cell-types:</label>
                             {{ form.only_key_celltypes.errors }}
                             {{ form.only_key_celltypes }}<br><br>
-                        </div>
-                        <div class="fieldWrapper post-form">
-                            <label for="{{ form.gene_cluster.id_for_label }}">Minimum no of genes per cell-type cluster:</label>
-                            {{ form.gene_cluster.errors }}
-                            {{ form.gene_cluster }}<small><i> default value is 20</i></small><br><br>
                         </div>
                         <div class="fieldWrapper post-form" id="synonym" onclick="ifsynonym();">
                             <label for="{{ form.synonym.id_for_label }}">Consider synonym for input genes:</label>
