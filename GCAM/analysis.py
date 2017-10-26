@@ -31,7 +31,11 @@ def gcam_analysis(args, outpath, resource_path):
     write_parameter(args, outdir)
 
     if subcommand == 'genebased':
-        genenames = args['genelist']
+        try:
+            genenames = args['genelist']
+        except:
+            print("Reading genenames from:", args['path'])
+            genenames = FilesFolders.get_genes(args['path'])
         gene_based(args, resource_path, genenames, outdir)
 
     if subcommand == 'exprbased':
