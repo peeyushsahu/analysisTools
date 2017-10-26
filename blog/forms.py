@@ -5,8 +5,10 @@ from django import forms
 
 class GenebasedForm(forms.Form):
     gene_text_field = forms.CharField(widget=forms.Textarea(attrs={'rows': 10}), required=False)
+    celltype_text_field = forms.CharField(widget=forms.Textarea(attrs={'rows': 10}), required=False)
     file = forms.FileField(required=False)  # gene_upload
-    only_key_celltypes = forms.BooleanField(required=False)
+    only_key_celltypes = forms.BooleanField(required=False, initial=False)
+    key_celltypes_advance = forms.BooleanField(required=False, initial=False)
     synonym = forms.BooleanField(required=False)
     options = (('human', 'Human'), ('mouse', 'Mouse'))
     species = forms.ChoiceField(choices=options, required=False)

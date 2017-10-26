@@ -17,28 +17,52 @@
                                 <a href="#">Select example gene names for analysis.</a>
                             </p>
                         </div>
+
                         <div class="fieldWrapper post-form-upload">
                             <label for="{{ form.file.id_for_label }}">Upload file:</label>
                             {{ form.file }}<br>
                             {{ form.file.errors }}
                         </div>
-                        <div class="fieldWrapper post-form">
-                            <h4>Select optional arguments</h4><br>
-                            <label for="{{ form.only_key_celltypes.id_for_label }}">Analyse only key cell-types:</label>
-                            {{ form.only_key_celltypes.errors }}
-                            {{ form.only_key_celltypes }}<br><br>
+
+                        <button type="button" class="save btn btn-default" data-toggle="collapse" data-target="#advSetting"> <strong>+</strong> Advance setting</button><br><br>
+
+                        <div id="advSetting" class="collapse">
+
+                            <div class="fieldWrapper post-form" id="keyCelltype" onclick="gb_advanceCheck();">
+                                <label for="{{ form.only_key_celltypes.id_for_label }}">key cell types</label>
+                                {{ form.only_key_celltypes.errors }}
+                                {{ form.only_key_celltypes }}
+                                <br><small><i><font color="red">Selecting this will restrict enrichment for 27 pre-selected celltypes</font></i></small>
+                            </div>
+
+                            <strong>OR</strong>
+
+                            <div class="fieldWrapper post-form" id="maual_celltypes" data-toggle="collapse" data-target="#advance_textbox">
+                                <label for="{{ form.key_celltypes_advance.id_for_label }}">manually enter key celltypes</label>
+                                {{ form.key_celltypes_advance.errors }}
+                                {{ form.key_celltypes_advance}}
+                            </div>
+
+                            <div class="fieldWrapper post-form collapse" id="advance_textbox">
+                                <small><i><font color="red">each celltype in new line</font></i></small><br>
+                                <label for="{{ form.celltype_text_field.id_for_label }}"></label>
+                                {{ form.celltype_text_field.errors }}
+                                {{ form.celltype_text_field}}<br><br>
+                            </div>
+
+                            <div class="fieldWrapper post-form" id="synonym" onclick="ifsynonym();">
+                                <label for="{{ form.synonym.id_for_label }}">Consider synonym for input genes:</label>
+                                {{ form.synonym.errors }}
+                                {{ form.synonym }}<br><br>
+                            </div>
+
+                            <div class="fieldWrapper post-form" id="organism" style="visibility:hidden">
+                                <label for="{{ form.species.id_for_label }}">if synonym, select organism:</label>
+                                {{ form.species.errors }}
+                                {{ form.species }}<br><br>
+                            </div>
                         </div>
-                        <div class="fieldWrapper post-form" id="synonym" onclick="ifsynonym();">
-                            <label for="{{ form.synonym.id_for_label }}">Consider synonym for input genes:</label>
-                            {{ form.synonym.errors }}
-                            {{ form.synonym }}<br><br>
-                        </div>
-                        <div class="fieldWrapper post-form" id="organism" style="visibility:hidden">
-                            <label for="{{ form.species.id_for_label }}">if synonym, select organism:</label>
-                            {{ form.species.errors }}
-                            {{ form.species }}<br><br>
-                        </div>
-                    <button onclick="dim();" type="submit" class="save btn btn-default">Submit</button><br><br><br>
+                    <br><button onclick="dim();" type="submit" class="save btn btn-primary button">Run analysis</button><br><br><br>
                     <div id="dimmer">
                         <div id="loading-img"><img src="{% static 'js/Leonardo.gif' %}" alt="Loader"/>
                             <p><b>........Analysing data.......</b></p>

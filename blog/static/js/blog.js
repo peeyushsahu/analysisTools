@@ -83,7 +83,7 @@ function readtable(file_path, divid){
 
 
 function ifsynonym(){
-    //console.log(document.getElementById("organism").style.visibility);
+    console.log(document.getElementById("organism").style.visibility);
     var state = document.getElementById("organism").style.visibility
     if (state == 'visible')
         document.getElementById("organism").style.visibility="hidden";
@@ -117,7 +117,14 @@ function upload_example_genebased(){
 }
 
 
-
+function gb_advanceCheck(){
+    console.log($('#maual_celltypes').prop('checked'));
+    //document.getElementById("maual_celltypes").checked = true;
+    var retval = $('#maual_celltypes').prop('checked');
+    alert(retval)
+    $('#maual_celltypes').prop('checked', false);
+    console.log("It is working");
+}
 
 
 
