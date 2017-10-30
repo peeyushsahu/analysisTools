@@ -90,7 +90,7 @@ def add_expressionbased_parser(parser):
     :return:
     '''
     argparser_exprbased = parser.add_parser("exprbased", help="GCAM Function: perform analysis dependent of expression data.")
-
+    '''
     group_input = argparser_exprbased.add_argument_group("Expression based analysis arguments")
 
     group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
@@ -123,7 +123,7 @@ def add_expressionbased_parser(parser):
                              help="This will calculate the enrichment of data for the selected key cell-types.")
     group_input.add_argument("-m", "--meanAsControl", dest="meanAsControl", action='store_true',
                              help="Instead of taking a reference sample, GCAM takes mean of all samples as reference.")
-
+    '''
 
 
 

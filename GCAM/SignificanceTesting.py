@@ -89,7 +89,7 @@ class SignificanceObject():
         #print(self.occurrencedf.shape)
 
 
-    def fisher_occurrence_test(self):
+    def pergene_celltype_occurrence_test(self):
         '''
         This method will calculate significance of celltypes per gene using their occurrence.
         Statistical test used is Fisher Exact Test
@@ -107,38 +107,29 @@ class SignificanceObject():
         pvaldf = pd.DataFrame()
         binom_pvaldf = pd.DataFrame()
         enrichmentdf = pd.DataFrame()
-        matsum = occu_df.sum().sum()
-        #print (occu_df.head())
+        print(occu_df.head())
         for k, v in occu_df.iterrows():
             key = v.keys()
             rowsum = v.sum()
             for i in range(0, v.shape[0]):
                 value = v[i]
                 if not value == 0:
-                    colsum = occu_df[[i]].sum()[0] - value
-                    rsum = rowsum - value
                     #print rowsum, value, colsum
                     enrichment = float(value)/occu_df[[i]].sum()[0]
                     if value != 0:
-                        ## Fisher p-value is calcualted but not put in the table
-                        oddsratio, pval = stats.fisher_exact([[value, colsum], [rsum, matsum-(value+rsum+colsum)]],
-                                                             alternative='greater')
                         celltype = key[i]
                         index = binom_prob[binom_prob['celltype'] == celltype].index.tolist()
                         background_prob = binom_prob.iloc[index[0], 1] / sum(binom_prob['occurrence'])
                         #print(binom_prob.iloc[index[0], 1], sum(binom_prob['occurrence']), background_prob)
                         #print(celltype, index, value, rsum+value)
                         #print(binom_prob.head())
-                        b_pval = stats.binom_test(value, rsum+value, background_prob, alternative='greater')
+                        b_pval = stats.binom_test(value, rowsum, background_prob, alternative='greater')
                     else:
-                        pval = 1
                         b_pval = 1
-                    pvaldf.loc[k, key[i]] = pval
                     binom_pvaldf.loc[k, key[i]] = b_pval
                     enrichmentdf.loc[k, key[i]] = enrichment
                 else:
                     binom_pvaldf.loc[k, key[i]] = 1
-                    pvaldf.loc[k, key[i]] = 1
                     enrichmentdf.loc[k, key[i]] = 0
         ## adj p-val calcualtion
         #print(binom_pvaldf.head())
@@ -146,14 +137,14 @@ class SignificanceObject():
         self.pvaldf = pvaldf
         fsstop = timeit.default_timer()
         logging.info('TC in sig occur test:'+str(fsstop-fsstart)+'sec')
-        self.celltype_overrepresntation_list(enrichmentdf)  #### def()
+        self.celltype_overrepresntation_list(enrichmentdf)
 
     def celltype_overrepresntation_list(self, enrichmentdf):
         '''
         This method will save the result of significance in one DF.
         '''
         significance = 1
-        column = ['celltype', 'gene', 'enrichment', 'p-val', 'FDR']
+        column = ['celltype', 'gene', 'enrichment', 'Binom p-val', 'FDR']
         cellgenedf = pd.DataFrame()
         #print(self.binom_pval_df.head())
         for gene, celltype in self.binom_pval_df.iterrows():
@@ -163,10 +154,10 @@ class SignificanceObject():
                         pd.Series([cell, gene, enrichmentdf.loc[gene, cell], pval, 0]), ignore_index=True)
         #print cellgenedf.head(10)
         cellgenedf.columns = column
-        cellgenedf = cellgenedf.sort_values(['celltype', 'p-val'], ascending=[True, True])
+        cellgenedf = cellgenedf.sort_values(['celltype', 'Binom p-val'], ascending=[True, True])
         cellgenedf.index = range(len(cellgenedf))
         for ind, row in cellgenedf.iterrows():
-            fdr = (row['p-val'] * len(cellgenedf)) / (ind + 1)
+            fdr = (row['Binom p-val'] * len(cellgenedf)) / (ind + 1)
             cellgenedf.iloc[ind, 4] = fdr
 
         print('cellgenedf shape:', cellgenedf.shape)
@@ -174,62 +165,51 @@ class SignificanceObject():
         self.cellgenedf = cellgenedf
         print('cellgenedf shape after:', cellgenedf.shape)
         #self.filter_cellgenedf()  # Filter single cell multigene enrihment
-        self.fisher_significant_celltypes()
+        self.overall_significant_celltypes()
 
-    def fisher_significant_celltypes(self):
+    def overall_significant_celltypes(self):
         '''
         This method will test the combined significance of celltype in the data and help predicts
         its association with user given data.
         '''
-        fsstart = timeit.default_timer()
         sigcelltype = pd.DataFrame()
         #print self.cellgenedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
-        cellgenedf = self.cellgenedf
-        c = len(cellgenedf[cellgenedf['FDR'] <= 0.01])
-        d = len(cellgenedf) #[cellgenedf['P-val'] < 0.5]
-        #print(c,d)
         for celltype, val in cellgroup:
             #print celltype
-            if len(val[val['FDR'] <= 0.01]) > 1:
+            if len(val[val['FDR'] <= 0.05]) > 1:
                 #print val
-                a = len(val[val['FDR'] <= 0.01])
-                b = len(val) #- a
-                cc = c #- a
-                dd = d #- (a+b+cc)
-                #print a, ':', b, ':', cc, ':', dd, c, d
-                p = stats.chi2_contingency([[b, dd], [a, cc]])[1]
-                #print 'celltype:'+celltype, a, p
-                sigcelltype = sigcelltype.append(pd.Series([celltype, a, p]), ignore_index=True)
-        sigcelltype.columns = ['celltype', 'genecluster', 'p-val']
-        length = len(sigcelltype[sigcelltype['p-val'] <= 0.05])
-        # Significant celltype check
-        sigcelltype.loc[:, 'FDR'] = 1
-        if length > 1:
-        #   raise ValueError('No siginificant celltypes.')
-            for k, v in sigcelltype.iterrows():
-                if v['p-val'] < 0.05/length:
-                    sigcelltype.loc[k, 'FDR'] = v['p-val']*length
-                else:
-                    sigcelltype.loc[k, 'FDR'] = 1
-            fsstop = timeit.default_timer()
-            logging.info('TC in sig celltype test:'+str(fsstop-fsstart)+'sec')
-        else:
-            logging.info('No siginificant celltypes....')
-        print('Sig cell type', sigcelltype)
+                a = len(val[val['FDR'] <= 0.05])
+                sigcelltype = sigcelltype.append(pd.Series([celltype, a]), ignore_index=True)
+        sigcelltype.columns = ['celltype', 'genecluster']
+        print('Sig cell type\n', sigcelltype)
         self.sigCelltypedf = sigcelltype
         self.binom_significant_celltypes()
 
+    def fisher_significant_celltypes(self):
+        '''
+        Fisher exact test for significance of celltype enrichment.
+        '''
+        sigcelltype = self.sigCelltypedf
+        cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
+        cellgenedf = self.cellgenedf
+        totalgenes = self.occurrencedf.shape()[0]
+        for celltype, val in cellgroup:
+            #print celltype
+            if len(val[val['FDR'] <= 0.05]) > 1:
+                #print val
+                a = len(val[val['FDR'] <= 0.05])
+        return
+
     def binom_significant_celltypes(self):
         '''
-        This will do binomial test for significant celltype enrichment and add column to sigCelltypedf dataframe.
+        Binomial test for significance of celltype enrichment.
         '''
         sigcelltype = self.sigCelltypedf
         occurenceDF = self.occurrencedf
         binom_prob = self.binom_prob
         occu_colsum = occurenceDF.sum(axis=0)
         occu_dfsum = occu_colsum.sum()
-        #print(sigcelltype.head())
         sigcelltype.loc[:, 'binom_pval'] = 1
         col = sigcelltype.columns.get_loc('binom_pval')
         #print(sigcelltype['celltype'])
@@ -238,9 +218,9 @@ class SignificanceObject():
                 ind = sigcelltype[sigcelltype['celltype'] == cell].index[0]
                 bprob_ind = binom_prob[binom_prob['celltype'] == cell].index[0]
                 background_prob = binom_prob.iloc[bprob_ind, 1] / sum(binom_prob['occurrence'])
-                print(binom_prob.iloc[bprob_ind, 1], sum(binom_prob['occurrence']), background_prob)
+                #print(binom_prob.iloc[bprob_ind, 1], sum(binom_prob['occurrence']), background_prob)
                 b_pval = stats.binom_test(occu, occu_dfsum, background_prob, alternative='greater')
-                #print(cell, occu, occu_dfsum, self.binom_prob.iloc[bprob_ind, 3])
+                print(cell, occu, occu_dfsum, background_prob, b_pval)
                 sigcelltype.iloc[ind, col] = b_pval
 
         sigcelltype.loc[:, 'binom_FDR'] = 1
@@ -249,9 +229,11 @@ class SignificanceObject():
         sigcelltype.index = range(len(sigcelltype))
 
         for ind, row in sigcelltype.iterrows():
-            fdr = (row['binom_pval'] * len(sigcelltype)) / (ind + 1)
-            sigcelltype.iloc[ind, ind_fdr] = fdr
-
+            if row['binom_pval'] < 0.05:
+                fdr = (row['binom_pval'] * len(sigcelltype)) / (ind + 1)
+                sigcelltype.iloc[ind, ind_fdr] = fdr
+            else:
+                pass
         print('Sig cell type', sigcelltype)
         self.sigCelltypedf = sigcelltype
 

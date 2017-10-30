@@ -127,7 +127,7 @@ def gene_based(args, resource_path, genenames, outdir):
 
     # Scale df for heatmap and do further analysis
     significanceDF = SignificanceTesting.SignificanceObject(cellOccu, binom_prob, resource_path, outdir, args)
-    significanceDF.fisher_occurrence_test()
+    significanceDF.pergene_celltype_occurrence_test()
     write_result(significanceDF, outdir, args)
     return significanceDF
 
@@ -144,7 +144,7 @@ def write_result(significanceDF, outdir, args):
     :return:
     '''
     cellgenedf = significanceDF.cellgenedf  # [significanceDF.cellgenedf['p-val'] < 0.05]
-    cellgenedf.sort_values('p-val', ascending=True)
+    cellgenedf.sort_values('Binom p-val', ascending=True)
     if len(cellgenedf)>0:
         filtereddf = filter_df(cellgenedf)
         #filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
@@ -161,9 +161,9 @@ def write_result(significanceDF, outdir, args):
         #sigCelltypedf = sigCelltypedf[sigCelltypedf['binom_pval'] < 0.05]
         significanceDF.data4radarplot()
 
-        sigCelltypedf = sigCelltypedf.sort_values('genecluster', ascending=False)
+        #sigCelltypedf = sigCelltypedf.sort_values('genecluster', ascending=False)
         sigCelltypedf.index = range(len(sigCelltypedf))
-        sigCelltypedf = sigCelltypedf[:20]
+        #sigCelltypedf = sigCelltypedf[:20]
         sigCelltypedf = sigCelltypedf.sort_values('genecluster', ascending=True)
         plots.plot_celltypesignificance(outdir, sigCelltypedf)
         #sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
@@ -180,8 +180,8 @@ def filter_df(df):
     new_df = pd.DataFrame(columns=df.columns)
     df_gr = df.groupby('celltype')
     for k, gr in df_gr:
-        new_gr = gr.sort_values('p-val', ascending=True)
+        new_gr = gr.sort_values('Binom p-val', ascending=True)
         for i, r in new_gr.iterrows():
-            if r['p-val'] <= 0.05:
+            if r['Binom p-val'] <= 0.05:
                 new_df = new_df.append(r)
     return new_df
