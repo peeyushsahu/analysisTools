@@ -185,21 +185,41 @@ class SignificanceObject():
         print('Sig cell type\n', sigcelltype)
         self.sigCelltypedf = sigcelltype
         self.binom_significant_celltypes()
+        self.hypergeometric_significant_celltypes()
 
-    def fisher_significant_celltypes(self):
+    def hypergeometric_significant_celltypes(self):
         '''
-        Fisher exact test for significance of celltype enrichment.
+        hypergeometric test for significance of celltype enrichment.
         '''
+        print('#####################hypergeometric test######################')
         sigcelltype = self.sigCelltypedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
-        cellgenedf = self.cellgenedf
-        totalgenes = self.occurrencedf.shape()[0]
-        for celltype, val in cellgroup:
-            #print celltype
-            if len(val[val['FDR'] <= 0.05]) > 1:
-                #print val
-                a = len(val[val['FDR'] <= 0.05])
-        return
+        totalgenes = self.occurrencedf.shape[0]
+
+        allsiggenes = self.cellgenedf
+        allsiggenes = allsiggenes[allsiggenes['FDR'] <= 0.05]
+        allsiggenes = len(set(allsiggenes['gene']))
+
+        sigcelltype.loc[:, 'hyper_pval'] = 1
+        col = sigcelltype.columns.get_loc('hyper_pval')
+        for index, row in sigcelltype.iterrows():
+            print(row['celltype'])
+            print(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
+            hyper_pval = stats.hypergeom.sf(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
+            print(hyper_pval)
+            sigcelltype.iloc[index, col] = hyper_pval
+
+        sigcelltype.loc[:, 'hyper_FDR'] = 1
+        ind_fdr = sigcelltype.columns.get_loc('hyper_FDR')
+        sigcelltype = sigcelltype.sort_values('hyper_pval', ascending=True)
+        sigcelltype.index = range(len(sigcelltype))
+        for ind, row in sigcelltype.iterrows():
+            if row['hyper_pval'] < 0.05:
+                fdr = (row['hyper_pval'] * len(sigcelltype)) / (ind + 1)
+                sigcelltype.iloc[ind, ind_fdr] = fdr
+            else:
+                pass
+        self.sigCelltypedf = sigcelltype
 
     def binom_significant_celltypes(self):
         '''
@@ -225,7 +245,7 @@ class SignificanceObject():
 
         sigcelltype.loc[:, 'binom_FDR'] = 1
         ind_fdr = sigcelltype.columns.get_loc('binom_FDR')
-        sigcelltype = sigcelltype.sort('binom_pval', ascending=True)
+        sigcelltype = sigcelltype.sort_values('binom_pval', ascending=True)
         sigcelltype.index = range(len(sigcelltype))
 
         for ind, row in sigcelltype.iterrows():

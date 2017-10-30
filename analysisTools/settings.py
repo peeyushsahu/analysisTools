@@ -127,4 +127,5 @@ STATICFILES_DIRS = [
     '/home/sahu/Desktop/GCAM_test',
     '/home/peeyush/Desktop/gcam_test_data',
     '/home/peeyush/PycharmProjects/analysisTools/data',
+    '/ps/imt/GCAM_output',
 ]

@@ -70,10 +70,10 @@ function readtable(file_path, divid){
             columns: [
                 { title: "celltype" },
                 { title: "genecluster" },
-                { title: "p-val" },
-                { title: "FDR" },
-                { title: "binom_pval" },
-                { title: "binom_FDR" }
+                { title: "Binom_p-val" },
+                { title: "Binom_FDR" },
+                { title: "Hyper_pval" },
+                { title: "Hyper_FDR" }
             ]
         } );
     } );

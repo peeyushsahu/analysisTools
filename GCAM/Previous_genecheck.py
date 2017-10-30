@@ -85,15 +85,20 @@ def occurrence_df(genenames, resource_path):
         sys.stdout.write("\rGenes remain for analyse:%d" % count)
         sys.stdout.flush()
         #print gene
-        GeneObj = Fetch_pmids.Genes(gene=gene, resource_path=resource_path) #, subquery=subquery
-        GeneObj.get_pmids()
-        active_ab_dict[gene] = len(GeneObj.pmids)
-        total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
-        GeneObj.get_pmid_pos(annoDB=annDB)
-        abs_in_DB += len(GeneObj.cellinpmid)
-        occuDict = GeneObj.get_occurrence(cellDB=cellDB)
-        occuDF.update(occuDict)
-        count -= 1
+        try:
+            GeneObj = Fetch_pmids.Genes(gene=gene, resource_path=resource_path) #, subquery=subquery
+            GeneObj.get_pmids()
+            active_ab_dict[gene] = len(GeneObj.pmids)
+            total_abstract += len(GeneObj.pmids) # calcuate total no of abstracts
+            GeneObj.get_pmid_pos(annoDB=annDB)
+            abs_in_DB += len(GeneObj.cellinpmid)
+            occuDict = GeneObj.get_occurrence(cellDB=cellDB)
+            occuDF.update(occuDict)
+            count -= 1
+        except Exception as e:
+            print(e)
+            pass
+
     occuDF = joincellsynonym(occuDF, resource_path)
     occuDataframe = pd.DataFrame.from_dict(occuDF, orient='index')
     if not created:

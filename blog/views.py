@@ -50,10 +50,11 @@ def genebased(request):
             '''
             Here we will connect gcam
             '''
-            result_path = ganalysis.gcam_analysis(parameter, outpath='/home/peeyush/Desktop/gcam_test_data',
-                                                  resource_path='/home/peeyush/Desktop/gcam_test_data/resources')
+            result_path = ganalysis.gcam_analysis(parameter, outpath='/ps/imt/GCAM_output',
+                                                  resource_path='/ps/imt/resources')
+            print(result_path)
             result_folder = result_path.split('/')[-1].strip()
-
+            print(result_folder)
             return redirect('genebased_results', path=result_folder)
 
     return render(request, 'blog/genebased.html', {'form': form})
