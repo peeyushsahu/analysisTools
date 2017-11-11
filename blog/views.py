@@ -50,8 +50,8 @@ def genebased(request):
             '''
             Here we will connect gcam
             '''
-            result_path = ganalysis.gcam_analysis(parameter, outpath='/ps/imt/GCAM_output',
-                                                  resource_path='/ps/imt/resources')
+            result_path = ganalysis.gcam_analysis(parameter, outpath='/home/peeyush/Desktop/gcam_test_data/test_26_OCT_17',
+                                                  resource_path='/home/peeyush/Desktop/gcam_test_data/resources')
             print(result_path)
             result_folder = result_path.split('/')[-1].strip()
             print(result_folder)

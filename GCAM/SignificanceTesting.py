@@ -78,15 +78,24 @@ class SignificanceObject():
         Filter occurrence df for removing gene wid less than 5 celltype tags
         :return:
         '''
+        print('########### Shape of occu df #############')
+        print(self.occurrencedf.shape)
         occuDf = self.occurrencedf
         Columns=[]
         for k, v in occuDf.iteritems():
-            #print k, v.sum()
             if v.sum() < 5:
                 Columns.append(k)
-        #print(len(Columns))
+        print(len(Columns))
         self.occurrencedf = occuDf.drop(Columns, axis=1)
-        #print(self.occurrencedf.shape)
+        '''
+        rows=[]
+        for k, r in occuDf.iterrows():
+            if r.sum() < 5:
+                rows.append(k)
+        print(len(rows))
+        self.occurrencedf = occuDf.drop(rows, axis=0)
+        '''
+        print(self.occurrencedf.shape)
 
 
     def pergene_celltype_occurrence_test(self):
