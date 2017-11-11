@@ -13,6 +13,11 @@ class BuildGcamDatabase:
         self.gene_2_pmid_dict = None
 
     def combine_gene_synonym(self):
+        '''
+        Combing synonyms for genes.
+        ex. {'A1BG': ['A1B', 'ABG', 'GAB', 'HYST2477']}
+        :return:
+        '''
         gene_synonym_dict = {}
         synonym_df = self.synonym_df
         for ind, row in synonym_df.iterrows():
@@ -24,6 +29,7 @@ class BuildGcamDatabase:
                 synonym.append(gene)
                 gene_synonym_dict[gene] = synonym
         self.gene_synonym_dict = gene_synonym_dict
+        print(gene_synonym_dict)
 
     def get_pmids(self, gene):
         '''
@@ -40,9 +46,14 @@ class BuildGcamDatabase:
         return PMID
 
     def build_gene_2_pmid(self):
+        '''
+        Creating list of PMIDS associated with gene and its synonym.
+        ex. {'A1BG': ['29103060', '28652196', '27132531', .....]}
+        :return:
+        '''
         gene_2_pmid_dict = {}
         gene_synonym_dict = self.gene_synonym_dict
-        for gene, synonym in gene_synonym_dict.iteritems():
+        for gene, synonym in gene_synonym_dict.items():
             pmid_list = []
             for i in synonym:
                 ids = self.get_pmids(i)
@@ -50,6 +61,7 @@ class BuildGcamDatabase:
             print("PMIDS for gene", gene, ":", len(pmid_list))
             gene_2_pmid_dict[gene] = list(set(pmid_list))
         self.gene_2_pmid_dict = gene_2_pmid_dict
+        print(gene_2_pmid_dict)
 
     def get_pmid_pos(self, pubmed_db):
         celltype_list = []
