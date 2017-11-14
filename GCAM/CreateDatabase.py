@@ -233,6 +233,11 @@ class BuildGcamDatabaseInOneGo:
         #print(gene_2_pmid_dict)
 
     def get_pmid_pos(self, pmid_list):
+        '''
+        Find PMID in pubmed_db and find annotated celltype
+        :param pmid_list:
+        :return:
+        '''
         celltype_list = []
         pubmed_db = self.pubmed_db
         for pmid in pmid_list:
