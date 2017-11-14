@@ -77,7 +77,8 @@ def read_annotation_database(path):
     '''
     try:
         annoDB = read_csv(path + os.path.sep + 'pmid_celltype_index_final.txt', header=0, sep="\t")
-    except:
+    except Exception as e:
+        print(e)
         raise ValueError("annotation db doesnot exist.")
     annoDB = annoDB.set_index(['pmid'])
     return annoDB
@@ -104,7 +105,8 @@ def celltype_DB(path):
                 celltype = celltype.rstrip()
                 if len(celltype) > 0:
                     celltypeList.append(celltype.lower())
-    except:
+    except Exception as e:
+        print(e)
         raise ValueError("celltype db does not exist.")
     celltypeList = list(set(celltypeList))
     #print (celltypeList)
