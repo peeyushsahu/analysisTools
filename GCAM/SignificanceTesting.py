@@ -214,7 +214,8 @@ class SignificanceObject():
         for index, row in sigcelltype.iterrows():
             print(row['celltype'])
             print(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
-            hyper_pval = stats.hypergeom.sf(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
+            ## stats.hypergeom.sf(x, M, n, N)
+            hyper_pval = stats.hypergeom.sf(row['genecluster'], totalgenes, allsiggenes, len(cellgroup.get_group(row['celltype'])))
             print(hyper_pval)
             sigcelltype.iloc[index, col] = hyper_pval
 

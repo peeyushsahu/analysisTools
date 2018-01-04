@@ -143,7 +143,6 @@ class BuildGcamDatabase:
         return gene2cell_occur
 
 
-
 class BuildGcamDatabaseInOneGo:
     '''
     This will create occurrence database for all the genes.
@@ -168,36 +167,40 @@ class BuildGcamDatabaseInOneGo:
         genes_left = []
         synonym_df = self.synonym_df
         index = 0
-        try:
-            for ind, row in synonym_df.iterrows():
-                index = ind
-                gene_synonym_dict = {}
-                gene = row['Symbol']
-                #print(gene)
-                sys.stdout.write("\r%d%%" % ind)
-                sys.stdout.flush()
-                synonym = row['Synonyms'].split('|')
-                if len(synonym) == 1 and synonym[0] == '-':
-                    gene_synonym_dict[gene] = [gene]
-                else:
-                    synonym.append(gene)
-                    gene_synonym_dict[gene] = synonym
 
-                # Associate gene names to pmids
+        for ind, row in synonym_df.iterrows():
+            index = ind
+            gene_synonym_dict = {}
+            gene = row['Symbol']
+            #print(gene)
+            sys.stdout.write("\r%d %s" % (ind, gene))
+            sys.stdout.flush()
+            synonym = row['Synonyms'].split('|')
+            gene_synonym_dict[gene] = [gene]
+            '''
+            if len(synonym) == 1 and synonym[0] == '-':
+                gene_synonym_dict[gene] = [gene]
+            else:
+                synonym.append(gene)
+                gene_synonym_dict[gene] = synonym
+            '''
+            # Associate gene names to pmids
+            try:
                 pmids = self.build_gene_2_pmid(gene_synonym_dict)
 
-                # Calculate celtype occurrence from associated abstract
-                cellOccur = self.get_occurrence(pmids)
-                cellOccurDict.update(cellOccur)
+            except Exception as e:
+                print(e)
+                time.sleep(5)
+                genes_left.append(index)
+                pass
+            # Calculate celtype occurrence from associated abstract
+            cellOccur = self.get_occurrence(pmids)
+            cellOccurDict.update(cellOccur)
 
-        except Exception as e:
-            print(e)
-            time.sleep(5)
-            genes_left.append(index)
         #self.gene_synonym_dict = gene_synonym_dict
         #print(gene_synonym_dict)
         celloccudf = pd.DataFrame.from_dict(cellOccurDict, orient='index')
-        celloccudf.to_csv('/home/peeyush/Desktop/gcam_test_data/resources/celltype_occu_DB.tsv', sep='\t', header=True)
+        celloccudf.to_csv('/ps/imt/resources/celltype_occu_widout_synonym_DB', sep='\t', header=True)
         return cellOccurDict, genes_left
 
     def get_pmids(self, gene):
