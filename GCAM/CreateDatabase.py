@@ -4,6 +4,7 @@ import pandas as pd
 import time
 import sys
 
+
 class BuildGcamDatabase:
     '''
     This will create occurrence database for all the genes.
