@@ -27,6 +27,5 @@ gcam/__init__.pyc
 gcam/__pycache__/
 gcam/migrations/__pycache__/
 gcamenv/
-polls/
-/gcamenv/
 /biopython-1.66/
+bin/run
