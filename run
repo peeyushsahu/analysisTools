@@ -2,9 +2,9 @@
 
 echo "Running GCAM"
 
-OUTPUT="/home/peeyush/Desktop/gcam_test_data/test_26_OCT_17/"
-INPUT="/home/peeyush/Desktop/gcam_test_data/test_26_OCT_17/input_gene_list.csv"
-DATABASE="/home/peeyush/Desktop/gcam_test_data/resources"
+OUTPUT="/results"
+INPUT="/input.txt"
+DATABASE="/resource"
 
 if [ -z "$1" ]; then
     echo "No additional arguments for run...."

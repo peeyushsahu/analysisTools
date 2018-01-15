@@ -28,4 +28,4 @@ gcam/__pycache__/
 gcam/migrations/__pycache__/
 gcamenv/
 /biopython-1.66/
-bin/run
+bin/run.sh
