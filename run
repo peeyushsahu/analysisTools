@@ -1,133 +1,18 @@
-#!/usr/bin/env python
+#!/bin/sh
 
-"""Description: GCAM v1 main executable.
+echo "Running GCAM"
 
-Copyright (c) 2015 Peeyush Sahu <peeyush.sahu@imt.uni-marburg.de>
+OUTPUT="/home/peeyush/Desktop/gcam_test_data/test_26_OCT_17/"
+INPUT="/home/peeyush/Desktop/gcam_test_data/test_26_OCT_17/input_gene_list.csv"
+DATABASE="/home/peeyush/Desktop/gcam_test_data/resources"
 
-This code is free software; you can redistribute it and/or modify it
-under the terms of the BSD License (see the file COPYING included with
-the distribution).
-
-@status: release candidate
-@version: $Id$
-@author:  Peeyush Sahu
-@contact: peeyush.sahu@imt.uni-marburg.de
-"""
-
-
-import sys
-from GCAM import analysis
-
-__author__ = 'peeyush'
-
-
-def main():
-    '''
-    The main function for GCAM.
-    :return:
-    '''
-    argparser = arg_parser()
-    args = argparser.parse_args()
-    args_dict = vars(args)
-    analysis.gcam_analysis(args_dict, args_dict['outdir'], args_dict['dbpath'])
-    #print ('Number of temp resource left: ', pkg_resources.cleanup_resources(force=False))
-
-
-
-
-def arg_parser():
-    '''
-    Creating parser objects.
-    :return:
-    '''
-    import argparse
-    description = "%(prog) -- A Gene Celltype Association Mining analysis"
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s 1.0.0", help="Version of software")
-    subparsers = parser.add_subparsers(dest='subcommand')
-    # command for 'genebased'
-    add_genebased_parser(subparsers)
-    # command for 'expressionbased'
-    #add_expressionbased_parser(subparsers)
-    return parser
-
-
-def add_genebased_parser(parser):
-    '''
-    Add argument parser for GCAM analysis with only gene list.
-    :param parser:
-    :return:
-    '''
-
-    argparser_genebased = parser.add_parser("genebased", help="Gene based enrichment analysis of celltypes")
-
-    group_input = argparser_genebased.add_argument_group("Genebased analysis arguments")
-
-    group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
-                             help = "If specified all output files will be written to that directory. Default: the current working directory")
-    group_input.add_argument("-p", "--path", type=str, dest="path", required=True,
-                             help="file path to gene names")
-    group_input.add_argument("-d", "--dbpath", type=str, dest="dbpath", required=False, default=None,
-                             help="dir path to db")
-    group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
-                             help="additional search term with gene name to select specific abstracts")
-    group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="Only if synonym is True. Choose organism from human or mouse")
-    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
-                             help="Lowest number of genes associated for celltype fraction analysis.")
-
-    group_input.add_argument("-k", "--keycelltype",dest="key_celltype_list", action='store_true',
-                             help="This will calculate the enrichment of data for the selected key cell-types.")
-    group_input.add_argument("-s", "--synonym", dest="synonym", action='store_true',
-                             help="If you want to consider synonyms for query genes, default=False")
-
-def add_expressionbased_parser(parser):
-    '''
-    Add argument parser for GCAM analysis with gene list and expression data.
-    :param parser:
-    :return:
-    '''
-    argparser_exprbased = parser.add_parser("exprbased", help="GCAM Function: perform analysis dependent of expression data.")
-
-    group_input = argparser_exprbased.add_argument_group("Expression based analysis arguments")
-
-    group_input.add_argument("-o", "--outdir", dest="outdir", type=str, required=True,
-                             help = "If specified all output files will be written to output directory, default: the current working directory")
-    group_input.add_argument("-e", "--exppath", type=str, dest="exppath", required=True,
-                             help="file path to expression data")
-    group_input.add_argument("-p", "--phenopath", type=str, dest="phenopath", required=True,
-                             help="file path to pheno data")
-    group_input.add_argument("-d", "--dbpath", type=str, dest="dbpath", required=False, default=None,
-                             help="dir path to db")
-    group_input.add_argument("-q", "--subquery", type=str, dest="subquery", default=None,
-                             help="additional search term with gene name to select specific abstracts")
-    group_input.add_argument("-s", "--synonym", dest="synonym", action='store_true',
-                             help="If you want to consider synonyms for query genes, default=False")
-    group_input.add_argument("-r", "--organism", type=str, default='human', dest="org", choices=['human', 'mouse'],
-                             help="Only if synonym is True. Choose organism from human or mouse")
-    group_input.add_argument("-g", "--gridsize", type=int, default=10, dest="som_gridsize",
-                             help="Define grid size for SOM clustering, default 10.")
-    group_input.add_argument("-f", "--foldifference", type=float, default=4.0, dest="som_foldifference",
-                             help="Define fold difference between samples cluster after SOM to select genes for celltype enrichment analyis.")
-    group_input.add_argument("-C", "--controlSample", type=str, default=None, dest="controlsample",
-                             help="Set control sample for relative celltype fraction analysis.")
-    group_input.add_argument("-c", "--clustrsizeSigcelltype", type=int, default=30, dest="celltypeClusterSize",
-                             help="Lowest number of genes associated for celltype fraction analysis.")
-    group_input.add_argument("-n", "--numiteration", type=int, default=1000, dest="somiter",
-                             help="Number of iteration performed for SOM clustering.")
-    group_input.add_argument("--selectCelltypes", type=str, default=None, dest="selectCelltypes",
-                             help="Comma separated list of celltypes, to remove their effects from celltype-fraction analysis. Max:26")
-    group_input.add_argument("-k", "--keycelltype",dest="key_celltype_list", action='store_true',
-                             help="This will calculate the enrichment of data for the selected key cell-types.")
-    group_input.add_argument("-m", "--meanAsControl", dest="meanAsControl", action='store_true',
-                             help="Instead of taking a reference sample, GCAM takes mean of all samples as reference.")
-
-
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        sys.stderr.write("User interruption! :D Bye!\n")
-        sys.exit(0)
+if [ -z "$1" ]; then
+    echo "No additional arguments for run...."
+    python gcamrun genebased "-o" "$OUTPUT" "-p" "$INPUT" "-d" "$DATABASE"
+elif [ -z "$2" ]; then
+    echo "There is one arguments: $1"
+    python gcamrun genebased "-o" "$OUTPUT" "-p" "$INPUT" "-d" "$DATABASE" "$1"
+else
+    echo "There are two arguments: $1 $2"
+    python gcamrun genebased "-o" "$OUTPUT" "-p" "$INPUT" "-d" "$DATABASE" "$1" "$2"
+fi

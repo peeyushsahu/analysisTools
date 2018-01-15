@@ -55,10 +55,10 @@ def gcam_analysis(args, outpath, resource_path):
                                                   control=args['controlsample'], path=outdir, clusterSize=int(args['celltypeClusterSize']))
 
     tstop = timeit.default_timer()
-    print ('Total time elapsed: ' + str(tstop - tstart) + ' sec')
+    print('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Total time elapsed: ' + str(tstop - tstart) + ' sec')
     logging.info('Finished')
-    FilesFolders.zipdir(outdir) # write zip dir of output folder for download
+    #FilesFolders.zipdir(outdir) # write zip dir of output folder for download
     return outdir
 
 
@@ -100,21 +100,31 @@ def warnings(args):
 def gene_based(args, resource_path, genenames, outdir):
     synonym = args['synonym']
     organism = args['org']
-    genenames = genenames
-    primarygene = genenames
-    binom_prob = FilesFolders.read_binom_prob(resource_path)
+    primarygene = map(str.upper, genenames)
+    primarygene = map_genename_2_genesymbol(primarygene, resource_path)
+    binom_prob = FilesFolders.read_binom_prob_occu(resource_path)
     pd.DataFrame(genenames, columns=['genenames']).to_csv(outdir + os.path.sep + 'input_gene_list.txt', sep='\t', encoding='utf-8', index=False)
 
     ocstart = timeit.default_timer()
+    '''
     if synonym:
         geneSyn = FilesFolders.gene_synonym(resource_path, organism)
         genenames = Occurrence.gene2synonym(genenames, geneSyn)
-        print ('Gene count after synonym:' + str(len(genenames)))
+        print('Gene count after synonym:' + str(len(genenames)))
     cellOccu = Previous_genecheck.occurrence_df(genenames, resource_path) # subquery is deprecated
     #cellOccu = Previous_genecheck.joincellsynonym(occuDF, resource_path)
     if synonym:
         cellOccu = Occurrence.joingenesynonym(cellOccu, primarygene, geneSyn)
-
+    '''
+#########################################
+    if synonym:
+        occuDf = FilesFolders.read_occurrence_table(resource_path, synonym=True)
+    else:
+        occuDf = FilesFolders.read_occurrence_table(resource_path)
+    print(occuDf.shape)
+    #print(genenames)
+    cellOccu = occuDf[occuDf.index.isin(primarygene)]
+    print(cellOccu.shape)
     # Reduced celltypes
     if args['key_celltype_list']:
         key_celltypes = FilesFolders.key_celltypes(resource_path)
@@ -144,12 +154,13 @@ def write_result(significanceDF, outdir, args):
     :return:
     '''
     cellgenedf = significanceDF.cellgenedf  # [significanceDF.cellgenedf['p-val'] < 0.05]
-    cellgenedf.sort_values('Binom p-val', ascending=True)
+    cellgenedf.sort_values('binom_pval', ascending=True)
     if len(cellgenedf)>0:
-        filtereddf = filter_df(cellgenedf)
+        #filtereddf = filter_df(cellgenedf)
         #filtereddf.to_excel(os.path.join(outdir, 'GCAM_sigenes.xlsx'), index=False)
-        filtereddf.to_csv(os.path.join(outdir, 'GCAM_sigenes.tsv'), sep='\t', index=False)
-    else: print('No significant genes for celltype')
+        cellgenedf.to_csv(os.path.join(outdir, 'GCAM_sigenes.tsv'), sep='\t', index=False)
+    else:
+        print('No significant genes for celltype')
 
     significanceDF.heatmapdf_create()
     significanceDF.plot_heatmap(outdir)
@@ -168,7 +179,8 @@ def write_result(significanceDF, outdir, args):
         plots.plot_celltypesignificance(outdir, sigCelltypedf)
         #sigCelltypedf.to_excel(os.path.join(outdir, 'GCAM_sigCelltypes.xlsx'), index=False)
         sigCelltypedf.to_csv(os.path.join(outdir, 'GCAM_sigCelltypes.tsv'), sep='\t', index=False)
-    else: print('No significant celltypes')
+    else:
+        print('No significant celltypes')
 
 
 def filter_df(df):
@@ -180,8 +192,32 @@ def filter_df(df):
     new_df = pd.DataFrame(columns=df.columns)
     df_gr = df.groupby('celltype')
     for k, gr in df_gr:
-        new_gr = gr.sort_values('Binom p-val', ascending=True)
+        new_gr = gr.sort_values('binom_pval', ascending=True)
         for i, r in new_gr.iterrows():
-            if r['Binom p-val'] <= 0.05:
+            if r['binom_pval'] <= 0.05:
                 new_df = new_df.append(r)
     return new_df
+
+
+def map_genename_2_genesymbol(genenames, resourcsepath):
+    '''
+    This will map gene names to gene symbols in case synonyms were used as search keys e.g. OCT4 for pou5f1.
+    :param genenames:
+    :return:
+    '''
+    gene2symbol_map = FilesFolders.read_genename_2_genesymbol_map(resourcsepath)
+    genesymbol = []
+    notfound = []
+    synonym = gene2symbol_map.index
+    for i in genenames:
+        if i in synonym:
+            symbol = gene2symbol_map.loc[i, 'symbol']
+            if type(symbol) is str:
+                genesymbol.append(str(symbol))
+            else:
+                genesymbol.extend(list(symbol))
+        else:
+            notfound.append(i)
+    print('symbols:', genesymbol)
+    print('not found:', notfound)
+    return genesymbol

@@ -7,9 +7,10 @@ import logging, timeit
 from GCAM import FilesFolders as read
 from GCAM import plots
 import seaborn as sns
+import statsmodels.sandbox.stats.multicomp as statsmodels
 
 
-class SignificanceObject():
+class SignificanceObject:
     '''
     This Object will hold dataframes used and created in analysis
     '''
@@ -18,6 +19,7 @@ class SignificanceObject():
         self.resourcepath = resourcepath
         self.occurrencedf = occurrencedf
         self.binom_prob = binom_prob
+        self.binom_prob_occu = read.read_binom_prob_occu_genes(resourcepath)
         self.heatmapdf = heatmapdf
         self.args = args
         self.filheatmapdf = None
@@ -78,14 +80,14 @@ class SignificanceObject():
         Filter occurrence df for removing gene wid less than 5 celltype tags
         :return:
         '''
-        print('########### Shape of occu df #############')
-        print(self.occurrencedf.shape)
+        #print('########### Shape of occu df #############')
+        #print(self.occurrencedf.shape)
         occuDf = self.occurrencedf
         Columns=[]
         for k, v in occuDf.iteritems():
             if v.sum() < 5:
                 Columns.append(k)
-        print(len(Columns))
+        #print(len(Columns))
         self.occurrencedf = occuDf.drop(Columns, axis=1)
         '''
         rows=[]
@@ -95,8 +97,7 @@ class SignificanceObject():
         print(len(rows))
         self.occurrencedf = occuDf.drop(rows, axis=0)
         '''
-        print(self.occurrencedf.shape)
-
+        #print(self.occurrencedf.shape)
 
     def pergene_celltype_occurrence_test(self):
         '''
@@ -116,32 +117,28 @@ class SignificanceObject():
         pvaldf = pd.DataFrame()
         binom_pvaldf = pd.DataFrame()
         enrichmentdf = pd.DataFrame()
-        print(occu_df.head())
+        #print(occu_df.head())
         for k, v in occu_df.iterrows():
             key = v.keys()
             rowsum = v.sum()
             for i in range(0, v.shape[0]):
                 value = v[i]
                 if not value == 0:
-                    #print rowsum, value, colsum
-                    enrichment = float(value)/occu_df[[i]].sum()[0]
-                    if value != 0:
-                        celltype = key[i]
-                        index = binom_prob[binom_prob['celltype'] == celltype].index.tolist()
-                        background_prob = binom_prob.iloc[index[0], 1] / sum(binom_prob['occurrence'])
-                        #print(binom_prob.iloc[index[0], 1], sum(binom_prob['occurrence']), background_prob)
-                        #print(celltype, index, value, rsum+value)
-                        #print(binom_prob.head())
-                        b_pval = stats.binom_test(value, rowsum, background_prob, alternative='greater')
-                    else:
-                        b_pval = 1
+                    #print(k, v, rowsum, value, i)
+                    enrichment = float(value)/occu_df.iloc[:, i].sum()
+                    celltype = key[i]
+                    index = binom_prob[binom_prob['celltype'] == celltype].index.tolist()
+                    #background_prob = binom_prob.iloc[index[0], 1] / sum(binom_prob['occurrence'])
+                    background_prob = binom_prob.loc[index[0], 'background_prob']
+                    #print(binom_prob.iloc[index[0], 1], sum(binom_prob['occurrence']), background_prob)
+                    #print(celltype, index, value, rsum+value)
+                    #print(binom_prob.head())
+                    b_pval = stats.binom_test(value, rowsum, background_prob, alternative='two-sided')
                     binom_pvaldf.loc[k, key[i]] = b_pval
                     enrichmentdf.loc[k, key[i]] = enrichment
                 else:
                     binom_pvaldf.loc[k, key[i]] = 1
                     enrichmentdf.loc[k, key[i]] = 0
-        ## adj p-val calcualtion
-        #print(binom_pvaldf.head())
         self.binom_pval_df = binom_pvaldf
         self.pvaldf = pvaldf
         fsstop = timeit.default_timer()
@@ -153,7 +150,7 @@ class SignificanceObject():
         This method will save the result of significance in one DF.
         '''
         significance = 1
-        column = ['celltype', 'gene', 'enrichment', 'Binom p-val', 'FDR']
+        column = ['celltype', 'gene', 'enrichment', 'binom_pval', 'FDR']
         cellgenedf = pd.DataFrame()
         #print(self.binom_pval_df.head())
         for gene, celltype in self.binom_pval_df.iterrows():
@@ -163,12 +160,20 @@ class SignificanceObject():
                         pd.Series([cell, gene, enrichmentdf.loc[gene, cell], pval, 0]), ignore_index=True)
         #print cellgenedf.head(10)
         cellgenedf.columns = column
-        cellgenedf = cellgenedf.sort_values(['celltype', 'Binom p-val'], ascending=[True, True])
+        cellgenedf = cellgenedf.sort_values(['celltype', 'binom_pval'], ascending=[True, True])
         cellgenedf.index = range(len(cellgenedf))
+
+        pvals = cellgenedf['binom_pval'].values
+        corr_pvals = statsmodels.multipletests(pvals=pvals, alpha=0.05, method='fdr_bh')
+        #print(pvals)
+        #print(corr_pvals)
+        cellgenedf['FDR'] = 0
+        cellgenedf['FDR'] = corr_pvals[1]
+        '''
         for ind, row in cellgenedf.iterrows():
             fdr = (row['Binom p-val'] * len(cellgenedf)) / (ind + 1)
             cellgenedf.iloc[ind, 4] = fdr
-
+        '''
         print('cellgenedf shape:', cellgenedf.shape)
         #cellgenedf = self.filter_df(cellgenedf)
         self.cellgenedf = cellgenedf
@@ -191,7 +196,7 @@ class SignificanceObject():
                 a = len(val[val['FDR'] <= 0.05])
                 sigcelltype = sigcelltype.append(pd.Series([celltype, a]), ignore_index=True)
         sigcelltype.columns = ['celltype', 'genecluster']
-        print('Sig cell type\n', sigcelltype)
+        #print('Sig cell type\n', sigcelltype)
         self.sigCelltypedf = sigcelltype
         self.binom_significant_celltypes()
         self.hypergeometric_significant_celltypes()
@@ -200,7 +205,7 @@ class SignificanceObject():
         '''
         hypergeometric test for significance of celltype enrichment.
         '''
-        print('#####################hypergeometric test######################')
+        print('Testing celltype enrichment....')
         sigcelltype = self.sigCelltypedf
         cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
         totalgenes = self.occurrencedf.shape[0]
@@ -212,61 +217,56 @@ class SignificanceObject():
         sigcelltype.loc[:, 'hyper_pval'] = 1
         col = sigcelltype.columns.get_loc('hyper_pval')
         for index, row in sigcelltype.iterrows():
-            print(row['celltype'])
-            print(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
+            #print(row['celltype'])
+            #print(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
             ## stats.hypergeom.sf(x, M, n, N)
-            hyper_pval = stats.hypergeom.sf(row['genecluster'], totalgenes, allsiggenes, len(cellgroup.get_group(row['celltype'])))
-            print(hyper_pval)
+            hyper_pval = stats.hypergeom.sf(row['genecluster']-1, totalgenes, allsiggenes, len(cellgroup.get_group(row['celltype'])))
+            #print(hyper_pval)
             sigcelltype.iloc[index, col] = hyper_pval
 
         sigcelltype.loc[:, 'hyper_FDR'] = 1
-        ind_fdr = sigcelltype.columns.get_loc('hyper_FDR')
+        #ind_fdr = sigcelltype.columns.get_loc('hyper_FDR')
         sigcelltype = sigcelltype.sort_values('hyper_pval', ascending=True)
         sigcelltype.index = range(len(sigcelltype))
-        for ind, row in sigcelltype.iterrows():
-            if row['hyper_pval'] < 0.05:
-                fdr = (row['hyper_pval'] * len(sigcelltype)) / (ind + 1)
-                sigcelltype.iloc[ind, ind_fdr] = fdr
-            else:
-                pass
+
+        pvals = sigcelltype['hyper_pval'].values
+        corr_pvals = statsmodels.multipletests(pvals=pvals, alpha=0.05, method='fdr_bh')
+        sigcelltype['hyper_FDR'] = corr_pvals[1]
         self.sigCelltypedf = sigcelltype
 
     def binom_significant_celltypes(self):
         '''
         Binomial test for significance of celltype enrichment.
         '''
+        print('Testing celltype enrichment....')
         sigcelltype = self.sigCelltypedf
-        occurenceDF = self.occurrencedf
-        binom_prob = self.binom_prob
-        occu_colsum = occurenceDF.sum(axis=0)
-        occu_dfsum = occu_colsum.sum()
+        cellgroup = self.cellgenedf.groupby(self.cellgenedf['celltype'])
+
+        binom_prob_occu = self.binom_prob_occu
+
         sigcelltype.loc[:, 'binom_pval'] = 1
         col = sigcelltype.columns.get_loc('binom_pval')
-        #print(sigcelltype['celltype'])
-        for cell, occu in occu_colsum.iteritems():
-            if cell in list(sigcelltype['celltype']):
-                ind = sigcelltype[sigcelltype['celltype'] == cell].index[0]
-                bprob_ind = binom_prob[binom_prob['celltype'] == cell].index[0]
-                background_prob = binom_prob.iloc[bprob_ind, 1] / sum(binom_prob['occurrence'])
-                #print(binom_prob.iloc[bprob_ind, 1], sum(binom_prob['occurrence']), background_prob)
-                b_pval = stats.binom_test(occu, occu_dfsum, background_prob, alternative='greater')
-                print(cell, occu, occu_dfsum, background_prob, b_pval)
-                sigcelltype.iloc[ind, col] = b_pval
+        for index, row in sigcelltype.iterrows():
+            #print(row['celltype'])
+            #print(row['genecluster'], totalgenes, len(cellgroup.get_group(row['celltype'])), allsiggenes)
+
+            bprob_ind = binom_prob_occu[binom_prob_occu['celltype'] == row['celltype']].index[0]
+            #print(bprob_ind)
+            background_prob = binom_prob_occu.loc[bprob_ind, 'background_prob']
+            #print(background_prob)
+            binom_pval = stats.binom_test(row['genecluster']-1, len(cellgroup.get_group(row['celltype'])), background_prob, alternative='two-sided')
+            sigcelltype.iloc[index, col] = binom_pval
 
         sigcelltype.loc[:, 'binom_FDR'] = 1
-        ind_fdr = sigcelltype.columns.get_loc('binom_FDR')
         sigcelltype = sigcelltype.sort_values('binom_pval', ascending=True)
         sigcelltype.index = range(len(sigcelltype))
 
-        for ind, row in sigcelltype.iterrows():
-            if row['binom_pval'] < 0.05:
-                fdr = (row['binom_pval'] * len(sigcelltype)) / (ind + 1)
-                sigcelltype.iloc[ind, ind_fdr] = fdr
-            else:
-                pass
-        print('Sig cell type', sigcelltype)
+        pvals = sigcelltype['binom_pval'].values
+        corr_pvals = statsmodels.multipletests(pvals=pvals, alpha=0.05, method='fdr_bh')
+        #print(pvals)
+        #print(corr_pvals)
+        sigcelltype['binom_FDR'] = corr_pvals[1]
         self.sigCelltypedf = sigcelltype
-
 
     def data4radarplot(self):
         '''
@@ -294,7 +294,6 @@ class SignificanceObject():
         gene2plot = np.divide(genes, sum(genes))
         #print(gene2plot, tissue, self.outdir)
         plots.plot_radar(gene2plot, tissue, self.outdir)
-
 
 
 def scale(val, src, dst):

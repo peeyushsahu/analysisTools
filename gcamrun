@@ -30,7 +30,7 @@ def main():
     args = argparser.parse_args()
     ### Calling GCAM analysis function with command line arguments
     print(args)
-    print(vars(args))
+    #print(vars(args))
     args_dict = vars(args)
     analysis.gcam_analysis(args_dict, args_dict['outdir'], args_dict['dbpath'])
     #print ('Number of temp resource left: ', pkg_resources.cleanup_resources(force=False))

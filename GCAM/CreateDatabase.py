@@ -63,9 +63,9 @@ class BuildGcamDatabase:
             pmid_list = []
             for i in synonym:
                 ids = self.get_pmids(i)
-                print('pmids for snonym:', i, ':', len(ids))
+                #print('pmids for snonym:', i, ':', len(ids))
                 pmid_list = pmid_list + ids
-            print("PMIDS for gene", gene, ":", len(pmid_list))
+            #print("PMIDS for gene", gene, ":", len(pmid_list))
             gene_2_pmid_dict[gene] = list(set(pmid_list))
         self.gene_2_pmid_dict = gene_2_pmid_dict
         #print(gene_2_pmid_dict)
@@ -98,10 +98,10 @@ class BuildGcamDatabase:
                         occu = found.lower().count(cells)
                         celloccu[cells] += occu
             gene2cell_occur[gene] = celloccu
-        print(gene2cell_occur)
+        #print(gene2cell_occur)
         gene2cell_occur = self.subtract_cellnamepeat(gene2cell_occur)
         print("########################################################################")
-        print(gene2cell_occur)
+        #print(gene2cell_occur)
         gene2cell_occur = self.joincellsynonym(gene2cell_occur)
         #return {self.gene: celloccu}
 
@@ -163,7 +163,7 @@ class BuildGcamDatabaseInOneGo:
         ex. {'A1BG': ['A1B', 'ABG', 'GAB', 'HYST2477']}
         :return:
         '''
-        #gene_synonym_dict = {}
+        gene_synonym_dict = {}
         cellOccurDict = {}
         genes_left = []
         synonym_df = self.synonym_df
@@ -178,14 +178,15 @@ class BuildGcamDatabaseInOneGo:
             sys.stdout.flush()
             synonym = row['Synonyms'].split('|')
             gene_synonym_dict[gene] = [gene]
-            '''
+
             if len(synonym) == 1 and synonym[0] == '-':
                 gene_synonym_dict[gene] = [gene]
             else:
                 synonym.append(gene)
                 gene_synonym_dict[gene] = synonym
-            '''
+
             # Associate gene names to pmids
+            pmids=None
             try:
                 pmids = self.build_gene_2_pmid(gene_synonym_dict)
 
@@ -313,3 +314,45 @@ class BuildGcamDatabaseInOneGo:
         #print('#################################################################')
         #print(gene2cell_occur)
         return gene2cell_occur
+
+
+def background_prob_4_celltype_occurence_per_gene():
+    '''
+    Calculate background probability for celltype occurrrence in all genes.
+    This will be used in calculating significance for significance of celltype in all gene.
+    :return:
+    '''
+    occudf = pd.read_csv('/home/peeyush/Desktop/gcam_test_data/resources/celltype_occu_widout_synonym_DB', header=0, sep='\t')
+    print(occudf.head())
+    occudf.index = occudf['Unnamed: 0']
+    occudf = occudf.drop('Unnamed: 0', axis=1)
+    empty_gene = occudf.sum(axis=1)
+    non_empty_gene = empty_gene.index[empty_gene!=0].tolist()
+    filtered_occur_df = occudf[occudf.index.isin(non_empty_gene)]
+    celltype_background_prob = {}
+
+    # populating background prob dict
+    for ind, col in filtered_occur_df.iteritems():
+        #print(ind)
+        #print(len(col[col>0]))
+        celltype_background_prob[ind] = {'found_in':len(col[col>0]),
+                                         'total_gene':len(col),
+                                         'background_prob':len(col[col>0])/len(col)}
+    pd.DataFrame(celltype_background_prob).T.to_csv('/home/peeyush/Desktop/gcam_test_data/resources/celltype_occu_binom_prob',
+                                                    header=True, sep='\t')
+
+
+def create_db_4_synonym_2_symbol_check():
+    gene_synonym = pd.read_csv('/home/peeyush/Desktop/gcam_test_data/resources/Homo_sapiens.gene_info', header=0,
+                               index_col=None, sep='\t')
+    gene_synonym_2_symbol = []
+    for ind, col in gene_synonym.iterrows():
+        genesymbol = col['Symbol']
+        geneid = col['GeneID']
+        gene_synonym_2_symbol.append({'synonym':genesymbol, 'geneID':geneid, 'symbol':genesymbol})
+        synonyms = col['Synonyms'].split('|')
+        if len(synonyms) >= 1 and synonyms[0] != '-':
+            for synonym in synonyms:
+                gene_synonym_2_symbol.append({'synonym':synonym, 'geneID':geneid, 'symbol':genesymbol})
+    pd.DataFrame(gene_synonym_2_symbol).to_csv('/home/peeyush/Desktop/gcam_test_data/resources/map_synonym_2_symbol_DB',
+                                                    header=True, sep='\t')

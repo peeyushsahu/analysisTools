@@ -5,7 +5,7 @@ import time
 
 
 def create_folders(path):
-    print ('Output directory created: ' + os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S"))))
+    print('Output directory created: ' + os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S"))))
     npath = os.path.join(path, 'GCAM_output_'+str(time.strftime("%d_%m_%Y"))+'_'+str(time.strftime("%H_%M_%S")))
     if not os.path.exists(npath):
         os.makedirs(npath)
@@ -236,9 +236,24 @@ def read_previous_occurrence_table(resource_path):
     return gene_occu_db, True
 
 
-def read_binom_prob(resource_path):
+def read_occurrence_table(resource_path, synonym=False):
     '''
     This will read the occurrence database for already analysed genes to save time.
+    :param resource_path:
+    :return:
+    '''
+    if synonym:
+        print('reading celltype occurrence table with synonym...')
+        gene_occu_db = read_csv(os.path.join(resource_path, 'celltype_occu_with_synonym_DB'), header=0, sep="\t", index_col=0)
+    else:
+        print('reading celltype occurrence table...')
+        gene_occu_db = read_csv(os.path.join(resource_path, 'celltype_occu_widout_synonym_DB'), header=0, sep="\t", index_col=0)
+    return gene_occu_db
+
+
+def read_binom_prob_occu(resource_path):
+    '''
+    This background probability is for occurrence for a celltype in all celltype occurrence.
     :param resource_path:
     :return:
     '''
@@ -248,6 +263,34 @@ def read_binom_prob(resource_path):
     except:
         raise ValueError('Binomial probabilities not found')
     return cell_binom
+
+
+def read_binom_prob_occu_genes(resource_path):
+    '''
+    This background probability is for occurrence for celltype in all genes .
+    :param resource_path:
+    :return:
+    '''
+    try:
+        #print ('binomial probability calculation...')
+        cell_binom = read_csv(os.path.join(resource_path, 'celltype_occu_binom_prob'), header=0, sep="\t")
+    except:
+        raise ValueError('Binomial probabilities not found')
+    return cell_binom
+
+
+def read_genename_2_genesymbol_map(resource_path):
+    '''
+
+    :return:
+    '''
+    try:
+        #print ('binomial probability calculation...')
+        name2symbol = read_csv(os.path.join(resource_path, 'map_synonym_2_symbol_DB'), header=0, sep="\t", index_col=0)
+        print(name2symbol.head())
+    except:
+        raise ValueError('Gene name symbol DB: map_synonym_2_symbol_DB not found')
+    return name2symbol
 
 
 def read_pheno_data(path):

@@ -75,7 +75,7 @@ def occurrence_df(genenames, resource_path):
     else:
         foundgenes_df = pd.DataFrame()
         new_genenames = genenames
-    print ('Reading required DBs')
+    print('Reading required DBs')
     total_abstract = 0
     abs_in_DB = 0
     count = 0 + len(new_genenames)
